@@ -16,6 +16,8 @@
 
 package io.kidsfirst.keys.put;
 
+import com.amazonaws.services.kms.AWSKMS;
+import com.amazonaws.services.kms.AWSKMSClient;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import org.json.simple.JSONObject;
@@ -31,6 +33,8 @@ public class PutSecret implements RequestStreamHandler {
   public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
 
     JSONObject responseJson;
+    String keyID = System.getenv("kms");
+    AWSKMS kms = AWSKMSClient.builder().build();
 
     try(BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8")) {
