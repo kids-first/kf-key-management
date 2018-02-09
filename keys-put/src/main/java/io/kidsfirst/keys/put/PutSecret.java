@@ -16,38 +16,62 @@
 
 package io.kidsfirst.keys.put;
 
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.AWSKMSClient;
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import io.kidsfirst.keys.core.LambdaRequestHandler;
+import io.kidsfirst.keys.core.dao.SecretDao;
+import io.kidsfirst.keys.core.model.Secret;
+import io.kidsfirst.keys.core.utils.KMSUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.*;
 
-public class PutSecret implements RequestStreamHandler {
+public class PutSecret extends LambdaRequestHandler{
 
-  private static JSONParser parser = new JSONParser();
+  /**
+   * Create secret object from userId and body of the Lambda event, encrypt the secretValue, and save to DynamoDB
+   */
+  @Override
+  public String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException {
 
-  public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
+    // === 1. Create a Secret to hold our data
+    Secret secret = new Secret();
 
-    JSONObject responseJson;
-    String keyID = System.getenv("kms");
-    AWSKMS kms = AWSKMSClient.builder().build();
+    if (userId == null) {
+      throw new IllegalArgumentException("User ID not found.");
+    }
+    secret.setUserID(userId);
 
-    try(BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8")) {
+    try {
 
-      JSONObject event = (JSONObject)parser.parse(reader);
-      // TODO: Implement
+      // === 2. Get service and secretValue from body
+      JSONParser parser = new JSONParser();
+      JSONObject body = (JSONObject) parser.parse((String) event.get("body"));
 
-    } catch (ParseException p) {
-      responseJson = new JSONObject();
-      responseJson.put("statusCode", "400");
-      responseJson.put("exception", p);
+      String service = (String) body.get("service");
+      String secretValue = (String) body.get("secret");
+
+      if (service == null) {
+        throw new IllegalArgumentException("Required Field [service] missing in request body.");
+      }
+
+      if (secretValue == null) {
+        throw new IllegalArgumentException("Required Field [secret] missing in request body.");
+      }
+
+      // === 3. Encrypt the secret value
+      String encryptedSecret = KMSUtils.encrypt(secretValue);
+
+      secret.setService(service);
+      secret.setSecret(encryptedSecret);
+
+    } catch (ClassCastException e) {
+      throw new IllegalArgumentException("Exception thrown accessing request data: " + e.getMessage());
+
     }
 
+    // === 4. Save to dynamo DB
+    SecretDao.saveOrUpdateSecret(secret);
+    return "";
   }
 
 }

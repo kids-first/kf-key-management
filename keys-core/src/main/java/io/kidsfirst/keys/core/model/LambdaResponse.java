@@ -69,6 +69,10 @@ public class LambdaResponse {
     this.body = body;
   }
 
+  public void setBody(JSONObject body) {
+    this.body = body.toJSONString();
+  }
+
   public JSONObject toJson() {
     JSONObject json = new JSONObject();
     json.put("isBase64Encoded", isBase64Encoded);

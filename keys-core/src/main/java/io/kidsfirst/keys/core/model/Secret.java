@@ -28,17 +28,17 @@ public class Secret implements Serializable {
   @DynamoDBHashKey(attributeName = "userID")
   private String userID;
 
-  @DynamoDBAttribute(attributeName = "type")
-  private String type;
+  @DynamoDBHashKey(attributeName = "service")
+  private String service;
 
   @DynamoDBAttribute(attributeName = "secret")
   private String secret;
 
   public Secret() {}
 
-  public Secret(String userID, String type, String secret) {
+  public Secret(String userID, String service, String secret) {
     this.userID = userID;
-    this.type = type;
+    this.service = service;
     this.secret = secret;
   }
 
@@ -50,12 +50,12 @@ public class Secret implements Serializable {
     this.userID = userID;
   }
 
-  public String getType() {
-    return type;
+  public String getService() {
+    return service;
   }
 
-  public void setType(String type) {
-    this.type = type;
+  public void setService(String type) {
+    this.service = type;
   }
 
   public String getSecret() {
