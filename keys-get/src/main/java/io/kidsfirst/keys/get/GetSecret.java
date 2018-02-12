@@ -16,65 +16,50 @@
 
 package io.kidsfirst.keys.get;
 
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
-import io.kidsfirst.keys.core.model.LambdaResponse;
+import io.kidsfirst.keys.core.LambdaRequestHandler;
+import io.kidsfirst.keys.core.dao.SecretDao;
+import io.kidsfirst.keys.core.model.Secret;
+import io.kidsfirst.keys.core.utils.KMSUtils;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import com.amazonaws.services.kms.AWSKMSClient;
 
-import java.io.*;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
-public class GetSecret implements RequestStreamHandler {
-
-  private static JSONParser parser = new JSONParser();
-
-  public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
-
-    JSONObject responseJson;
-
-    /**
-     * KMS Environment Variable
-     */
-    String keyID = System.getenv("kms");
-    AWSKMS kms = AWSKMSClient.builder().build();
-
-    /**
-     * TODO: Ego private key variable for validating JWT
-     */
-
-    try(BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8")) {
-
-      JSONObject event = (JSONObject)parser.parse(reader);
-      LambdaResponse resp = new LambdaResponse();
+public class GetSecret extends LambdaRequestHandler{
 
 
-      // TODO: Implement
+  @Override
+  public String processEvent(JSONObject event, String userId) throws IllegalArgumentException {
 
-      JSONObject data  = new JSONObject();
-      resp.setBase64Encoded(false);
-      resp.setStatusCode("200");
-      resp.setBody(data.toJSONString());
-      resp.setHeaders(new HashMap<>());
-
-      responseJson = resp.toJson();
-    } catch (ParseException p) {
-      responseJson = new JSONObject();
-      responseJson.put("statusCode", "400");
-      responseJson.put("exception", p);
-    } catch (Exception e) {
-      responseJson = new JSONObject();
-      responseJson.put("statusCode", "500");
-      responseJson.put("exception", e);
+    String service = getService(event);
+    if (service == null) {
+        throw new IllegalArgumentException("Required Field [type] missing in query string.");
     }
 
-    OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
-    writer.write(responseJson.toJSONString());
-    writer.close();
+    List<Secret> allSecrets = SecretDao.getSecret(service, userId);
+
+
+    if (!allSecrets.isEmpty()) {
+    Secret secret = allSecrets.get(0);
+      // TODO: decrypt secretValue
+      String secretValue = secret.getSecret();
+      return KMSUtils.decrypt(secretValue);
+
+    } else {
+      // If no data available, empty response
+      return "";
+
+    }
+  }
+
+  public String getService(JSONObject event) {
+    // 'type' is a query param, passed in the event object:
+    //  event.queryStringParameters.service
+
+    JSONObject queryParam = (JSONObject) event.get("queryStringParameters");
+    String service = (String) queryParam.getOrDefault("service", null);
+
+    return service;
   }
 
 }

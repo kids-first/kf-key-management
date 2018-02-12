@@ -49,8 +49,8 @@ public class LambdaResponse {
     return statusCode;
   }
 
-  public void setStatusCode(String statusCode) {
-    this.statusCode = statusCode;
+  public void setStatusCode(int statusCode) {
+    this.statusCode = Integer.toString(statusCode);
   }
 
   public Map<String, String> getHeaders() {
@@ -67,6 +67,10 @@ public class LambdaResponse {
 
   public void setBody(String body) {
     this.body = body;
+  }
+
+  public void setBody(JSONObject body) {
+    this.body = body.toJSONString();
   }
 
   public JSONObject toJson() {

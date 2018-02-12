@@ -17,11 +17,15 @@
 package io.kidsfirst.keys.core.dao;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import io.kidsfirst.keys.core.manager.DynamoDBManager;
 import io.kidsfirst.keys.core.model.Secret;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SecretDao {
 
@@ -43,11 +47,24 @@ public class SecretDao {
     return instance;
   }
 
-  public List<Secret> findAllSecrets() {
+  public static List<Secret> findAllSecrets() {
     return mapper.scan(Secret.class, new DynamoDBScanExpression());
   }
 
-  public void saveOrUpdateSecret(Secret secret) {
+  public static List<Secret> getSecret(String service, String userId) {
+
+    Map<String, AttributeValue> eav = new HashMap<>();
+    eav.put(":val1", new AttributeValue().withS(userId));
+    eav.put(":val2", new AttributeValue().withS(service));
+
+    DynamoDBQueryExpression<Secret> queryExpression = new DynamoDBQueryExpression<Secret>()
+      .withKeyConditionExpression("userID = :val1 and service = :val2")
+      .withExpressionAttributeValues(eav);
+
+    return mapper.query(Secret.class, queryExpression);
+  }
+
+  public static void saveOrUpdateSecret(Secret secret) {
     mapper.save(secret);
   }
 

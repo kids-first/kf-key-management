@@ -26,6 +26,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>keys-core</artifactId>
-
+    <dependencies>
+        <!-- Json Web Tokens -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.8.0</version>
+        </dependency>
+    </dependencies>
 
 </project>

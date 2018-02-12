@@ -25,37 +25,37 @@ import java.io.Serializable;
 @DynamoDBTable(tableName = "secret")
 public class Secret implements Serializable {
 
-  @DynamoDBHashKey(attributeName = "userID")
-  private String userID;
+  @DynamoDBHashKey(attributeName = "userId")
+  private String userId;
 
-  @DynamoDBAttribute(attributeName = "type")
-  private String type;
+  @DynamoDBHashKey(attributeName = "service")
+  private String service;
 
   @DynamoDBAttribute(attributeName = "secret")
   private String secret;
 
   public Secret() {}
 
-  public Secret(String userID, String type, String secret) {
-    this.userID = userID;
-    this.type = type;
+  public Secret(String userId, String service, String secret) {
+    this.userId = userId;
+    this.service = service;
     this.secret = secret;
   }
 
-  public String getUserID() {
-    return userID;
+  public String getUserId() {
+    return userId;
   }
 
-  public void setUserID(String userID) {
-    this.userID = userID;
+  public void setUserId(String userId) {
+    this.userId = userId;
   }
 
-  public String getType() {
-    return type;
+  public String getService() {
+    return service;
   }
 
-  public void setType(String type) {
-    this.type = type;
+  public void setService(String type) {
+    this.service = type;
   }
 
   public String getSecret() {
