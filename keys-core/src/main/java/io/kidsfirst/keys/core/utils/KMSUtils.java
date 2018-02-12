@@ -19,7 +19,6 @@ public class KMSUtils {
   public static String encrypt(String original) {
 
     try {
-
       ByteBuffer bufferedOriginal = StringToByteBuffer(original);
       EncryptRequest encryptRequest = new EncryptRequest();
       encryptRequest.withKeyId(keyId);
@@ -28,6 +27,7 @@ public class KMSUtils {
       EncryptResult result = kms.encrypt(encryptRequest);
       ByteBuffer bufferedCipher = result.getCiphertextBlob();
       return ByteBufferToString(bufferedCipher);
+
     } catch (UnsupportedEncodingException e){
       // TODO: shouldn't be reachable, handle anyways
 

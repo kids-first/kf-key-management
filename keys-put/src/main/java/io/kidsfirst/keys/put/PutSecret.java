@@ -39,7 +39,7 @@ public class PutSecret extends LambdaRequestHandler{
     if (userId == null) {
       throw new IllegalArgumentException("User ID not found.");
     }
-    secret.setUserID(userId);
+    secret.setUserId(userId);
 
     try {
 

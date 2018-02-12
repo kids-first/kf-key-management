@@ -10,6 +10,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
@@ -21,52 +22,43 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
 
   public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
     LambdaResponse resp = new LambdaResponse();
-    String data = "";
+    String data;
 
-
-    try(BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
+    try(BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
 
       JSONObject event = (JSONObject)parser.parse(reader);
 
-      String auth = (String)((JSONObject)event.get("headers")).getOrDefault("Authorization","");
-
-      String userId = null;
-      try {
-        // Process header, will throw error if authorization fails
-        Jwt authToken = JWTUtils.parseToken(auth.replace("Bearer ", ""));
-        userId = JWTUtils.getUserId(authToken);
-
-      } catch (Exception e) {
-        // Authorization failure, return 403
-
-        resp.setStatusCode("403");
-        data = formatException(e).toJSONString();
-      }
+      String userId = getUserId(event);
 
       if (userId == null || userId.isEmpty()) {
-        throw new IllegalArgumentException("Unable to identify user from authorization token.");
+        // Ensure we got a non-empty userId, otherwise throw error for illegal access
+        throw new IllegalAccessException("Unable to identify user from authorization token.");
       }
 
       // ================================
       // !!! BEHOLD: Call to abstract !!!
       // ================================
       data = this.processEvent(event, userId);
-      resp.setStatusCode("200");
+      resp.setStatusCode(HttpURLConnection.HTTP_OK);
 
     } catch (ParseException e) {
       // Error parsing request body - return 400
-      resp.setStatusCode("400");
+      resp.setStatusCode(HttpURLConnection.HTTP_BAD_REQUEST);
       data = formatException(e).toJSONString();
 
     } catch (IllegalArgumentException e) {
       // Catchall used to indicate that we are missing required fields - return 400
-      resp.setStatusCode("400");
+      resp.setStatusCode(HttpURLConnection.HTTP_BAD_REQUEST);
+      data = formatException(e).toJSONString();
+
+    } catch (IllegalAccessException e) {
+      // JWT/User ID issue, return unauthorized 401
+      resp.setStatusCode(HttpURLConnection.HTTP_UNAUTHORIZED);
       data = formatException(e).toJSONString();
 
     } catch (Exception e) {
       // Something unexpected happened - return 500
-      resp.setStatusCode("500");
+      resp.setStatusCode(HttpURLConnection.HTTP_INTERNAL_ERROR);
       data = formatException(e).toJSONString();
     }
 
@@ -78,6 +70,22 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
     OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
     writer.write(responseJson.toJSONString());
     writer.close();
+  }
+
+  private static String getUserId(JSONObject event) throws IllegalAccessException {
+
+    try {
+      String auth = (String)((JSONObject)event.get("headers")).getOrDefault("Authorization","");
+
+      // Process header, will throw error if authorization fails
+      Jwt authToken = JWTUtils.parseToken(auth.replace("Bearer ", ""));
+
+      return JWTUtils.getUserId(authToken);
+
+    } catch (Exception e) {
+      throw new IllegalAccessException(e.getMessage());
+
+    }
   }
 
   private static JSONObject formatException(Exception e) {

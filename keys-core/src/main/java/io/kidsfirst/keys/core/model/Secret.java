@@ -25,8 +25,8 @@ import java.io.Serializable;
 @DynamoDBTable(tableName = "secret")
 public class Secret implements Serializable {
 
-  @DynamoDBHashKey(attributeName = "userID")
-  private String userID;
+  @DynamoDBHashKey(attributeName = "userId")
+  private String userId;
 
   @DynamoDBHashKey(attributeName = "service")
   private String service;
@@ -36,18 +36,18 @@ public class Secret implements Serializable {
 
   public Secret() {}
 
-  public Secret(String userID, String service, String secret) {
-    this.userID = userID;
+  public Secret(String userId, String service, String secret) {
+    this.userId = userId;
     this.service = service;
     this.secret = secret;
   }
 
-  public String getUserID() {
-    return userID;
+  public String getUserId() {
+    return userId;
   }
 
-  public void setUserID(String userID) {
-    this.userID = userID;
+  public void setUserId(String userId) {
+    this.userId = userId;
   }
 
   public String getService() {
