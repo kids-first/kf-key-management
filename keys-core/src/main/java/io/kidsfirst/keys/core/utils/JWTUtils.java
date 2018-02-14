@@ -45,12 +45,10 @@ public class JWTUtils {
   }
 
   public static String getUserId(Jwt token) {
-    // Using email for userId:
-    //   body.context.user.email
+    // Property 'sub' contains userId:
+    //   body.sub
 
     Map body     = (Map)    token.getBody();
-//    Map context  = (Map)    body.get("context");
-//    Map user     = (Map)    context.get("user");
     String id    = (String) body.get("sub");
 
     return id;
