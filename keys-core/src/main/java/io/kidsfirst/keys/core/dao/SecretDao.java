@@ -58,7 +58,7 @@ public class SecretDao {
     eav.put(":val2", new AttributeValue().withS(service));
 
     DynamoDBQueryExpression<Secret> queryExpression = new DynamoDBQueryExpression<Secret>()
-      .withKeyConditionExpression("userID = :val1 and service = :val2")
+      .withKeyConditionExpression("userId = :val1 and service = :val2")
       .withExpressionAttributeValues(eav);
 
     return mapper.query(Secret.class, queryExpression);
