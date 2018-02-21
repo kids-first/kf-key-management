@@ -13,6 +13,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
 
 public abstract class LambdaRequestHandler implements RequestStreamHandler {
 
@@ -62,7 +63,8 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
       data = formatException(e).toJSONString();
     }
 
-    resp.setHeaders(new HashMap<>());
+
+    resp.setHeaders(buildHeaders());
     resp.setBase64Encoded(false);
     resp.setBody(data);
     JSONObject responseJson = resp.toJson();
@@ -70,6 +72,18 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
     OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
     writer.write(responseJson.toJSONString());
     writer.close();
+  }
+
+  private static Map<String, String> buildHeaders() {
+    final Map<String, String> headers = new HashMap<>();
+
+    String allowedDomains = System.getenv("corsAllowedDomains");
+    if (allowedDomains == null || allowedDomains.isEmpty()) {
+      allowedDomains = "*";
+    }
+    headers.put("Access-Control-Allow-Origin", allowedDomains);
+
+    return headers;
   }
 
   private static String getUserId(JSONObject event) throws IllegalAccessException {

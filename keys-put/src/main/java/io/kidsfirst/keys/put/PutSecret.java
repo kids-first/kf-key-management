@@ -43,7 +43,7 @@ public class PutSecret extends LambdaRequestHandler{
 
     try {
 
-      // === 2. Get service and secretValue from body
+      // === 2. Get service and secretValue from event
       JSONParser parser = new JSONParser();
       JSONObject body = (JSONObject) parser.parse((String) event.get("body"));
 
