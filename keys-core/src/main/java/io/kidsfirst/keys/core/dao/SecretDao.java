@@ -16,6 +16,7 @@
 
 package io.kidsfirst.keys.core.dao;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDeleteExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
@@ -62,6 +63,11 @@ public class SecretDao {
       .withExpressionAttributeValues(eav);
 
     return mapper.query(Secret.class, queryExpression);
+  }
+
+  public static void deleteSecret(String service, String userId) {
+    List<Secret> matchingSecrets =  getSecret(service, userId);
+    matchingSecrets.forEach(secret -> mapper.delete(secret));
   }
 
   public static void saveOrUpdateSecret(Secret secret) {
