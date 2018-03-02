@@ -19,10 +19,10 @@ In *Basic settings* of the Lambda configuration, set Memory to 1024 and timeout 
 
 ## Methods
 
-[Get Secret](#get-secret)
-[Put Secret](#put-secret)
-[Delete Secret](#delete-secret)
-[Cavatica Proxy](#cavatica-proxy)
+ * [Get Secret](#get-secret)
+ * [Put Secret](#put-secret)
+ * [Delete Secret](#delete-secret)
+ * [Cavatica Proxy](#cavatica-proxy)
 
 All methods require a JWT in the Authorization header which can be verified with the public key provided in the configuration. Without a valid token the request will be rejected. The UserID is taken from the `sub` field of the JWT.
 
