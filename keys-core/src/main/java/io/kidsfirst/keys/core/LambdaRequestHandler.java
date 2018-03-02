@@ -19,7 +19,7 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
 
   private static JSONParser parser = new JSONParser();
 
-  public abstract String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException;
+  public abstract String processEvent(JSONObject event, String userId) throws Exception;
 
   public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
     LambdaResponse resp = new LambdaResponse();
