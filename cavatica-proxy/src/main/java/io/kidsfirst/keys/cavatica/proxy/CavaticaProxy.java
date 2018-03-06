@@ -32,7 +32,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +46,7 @@ public class CavaticaProxy extends LambdaRequestHandler {
 
   @Override
   public String processEvent(JSONObject event, String userId)
-    throws IllegalArgumentException, URISyntaxException, IOException, ParseException {
+    throws IllegalArgumentException, IOException, ParseException {
 
     if (userId == null) {
       throw new IllegalArgumentException("User ID not found.");
@@ -73,9 +72,7 @@ public class CavaticaProxy extends LambdaRequestHandler {
       JSONObject bodyJson = ((JSONObject) eventBody.get("body"));
       String body = bodyJson == null ? null : bodyJson.toJSONString();
 
-      String response = sendCavaticaRequest(cavaticaKey, path, method, body);
-
-      return response;
+      return sendCavaticaRequest(cavaticaKey, path, method, body);
 
     } catch (ClassCastException e) {
       throw new IllegalArgumentException("Exception thrown accessing request data: " + e.getMessage());
@@ -88,9 +85,7 @@ public class CavaticaProxy extends LambdaRequestHandler {
 
     if (!allSecrets.isEmpty()) {
       Secret secret = allSecrets.get(0);
-
       String secretValue = secret.getSecret();
-
       return KMSUtils.decrypt(secretValue);
 
     } else {
@@ -100,7 +95,7 @@ public class CavaticaProxy extends LambdaRequestHandler {
 
 
   private String sendCavaticaRequest(String cavaticaKey, String path, String method, String body)
-    throws URISyntaxException, IOException {
+    throws IOException {
 
     URL url = new URL(cavaticaApiRoot+path);
 
@@ -129,8 +124,8 @@ public class CavaticaProxy extends LambdaRequestHandler {
     int status = con.getResponseCode();
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
-    StringBuffer content = new StringBuffer();
-    reader.lines().forEach(line->content.append(line));
+    StringBuilder content = new StringBuilder();
+    reader.lines().forEach(content::append);
     reader.close();
     String responseBody = content.toString();
 
