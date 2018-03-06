@@ -19,7 +19,7 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
 
   private static JSONParser parser = new JSONParser();
 
-  public abstract String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException;
+  public abstract String processEvent(JSONObject event, String userId) throws Exception;
 
   public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
     LambdaResponse resp = new LambdaResponse();
@@ -40,7 +40,10 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
       // !!! BEHOLD: Call to abstract !!!
       // ================================
       data = this.processEvent(event, userId);
-      resp.setStatusCode(HttpURLConnection.HTTP_OK);
+
+      // If data comes back without error but is empty, we return 204, otherwise 200
+      int responseCode = data.isEmpty() ? HttpURLConnection.HTTP_NO_CONTENT : HttpURLConnection.HTTP_OK;
+      resp.setStatusCode(responseCode);
 
     } catch (ParseException e) {
       // Error parsing request body - return 400

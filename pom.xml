@@ -29,6 +29,7 @@
         <module>keys-delete</module>
         <module>keys-get</module>
         <module>keys-put</module>
+        <module>cavatica-proxy</module>
     </modules>
 
     <dependencyManagement>
