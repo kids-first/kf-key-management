@@ -18,6 +18,7 @@ package io.kidsfirst.keys.core.model;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
 import java.io.Serializable;
@@ -28,7 +29,7 @@ public class Secret implements Serializable {
   @DynamoDBHashKey(attributeName = "userId")
   private String userId;
 
-  @DynamoDBHashKey(attributeName = "service")
+  @DynamoDBRangeKey(attributeName = "service")
   private String service;
 
   @DynamoDBAttribute(attributeName = "secret")

@@ -64,6 +64,11 @@ public class SecretDao {
     return mapper.query(Secret.class, queryExpression);
   }
 
+  public static void deleteSecret(String service, String userId) {
+    List<Secret> matchingSecrets =  getSecret(service, userId);
+    matchingSecrets.forEach(mapper::delete);
+  }
+
   public static void saveOrUpdateSecret(Secret secret) {
     mapper.save(secret);
   }
