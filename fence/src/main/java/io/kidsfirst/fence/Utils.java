@@ -51,20 +51,8 @@ public class Utils {
 
     public static String openid_provider = getOpenIdProvider();
 
-    public static String public_key_fence = getFencePublicKey();
-
-    public static String public_key_ego = getEgoPublicKey();
-
     private static String getOpenIdProvider() {
         return DEFAULT_OPENID_PROVIDER;
-    }
-
-    private static String getFencePublicKey() {
-        return System.getProperty(ENV_FENCE_PUBLIC_KEY);
-    }
-
-    private static String getEgoPublicKey(){
-        return System.getProperty(ENV_EGO_PUBLIC_KEY);
     }
 
     private static String geAuthorizationClientTableName(){
@@ -72,7 +60,7 @@ public class Utils {
     }
 
     private static String getTokensTableName() {
-        return Optional.of(System.getProperty(ENV_TOKEN_TABLE_NAME)).orElse(DEFAULT_CLIENT_INFO_TABLE_NAME);
+        return Optional.of(System.getProperty(ENV_TOKEN_TABLE_NAME)).orElse(DEFAULT_TOKEN_TABLE_NAME);
     }
 
     public static void persistTokens(String userid_in_fence, String userid_in_ego, String access_token, String refresh_token) {
