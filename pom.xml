@@ -28,6 +28,7 @@
         <module>keys-core</module>
         <module>keys-get</module>
         <module>keys-put</module>
+        <module>fence</module>
     </modules>
 
     <dependencyManagement>
