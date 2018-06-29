@@ -27,8 +27,8 @@ public class RefreshTokens extends LambdaRequestHandler {
         val tokens =
                 refreshTokens(
                         retrieveTokens(userId).refresh_token,
-                        Utils.auth_client.clientId,
-                        Utils.auth_client.clientSecret,
+                        Utils.getAuthClient().clientId,
+                        Utils.getAuthClient().clientSecret,
                         System.getProperty(ENV_FENCE_TOKEN_ENDPOINT)
                 );
 
