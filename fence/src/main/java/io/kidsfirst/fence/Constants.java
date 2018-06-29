@@ -1,9 +1,9 @@
 package io.kidsfirst.fence;
 
 public interface Constants {
-    String ENV_CLIENT_INFO_TABLE_NAME = "KF_LAMBDA_AUTH_CLIENT_TABLE_NAME";
-    String ENV_FENCE_TOKEN_ENDPOINT = "KF_LAMBDA_FENCE_TOKEN_ENDPOINT";
-    String ENV_TOKEN_TABLE_NAME = "KF_LAMBDA_TOKEN_TABLE_NAME";
+    String ENV_AUTH_CLIENT_TABLE_NAME = "auth_client_table_name";
+    String ENV_FENCE_TOKEN_ENDPOINT = "fence_token_endpoint";
+    String ENV_TOKEN_TABLE_NAME = "token_table_name";
     String DEFAULT_CLIENT_INFO_TABLE_NAME = "kf_auth_client";
     String DEFAULT_TOKEN_TABLE_NAME = "kf_token";
     String FIELD_NAME_OF_CLIENT_ID = "client_id";

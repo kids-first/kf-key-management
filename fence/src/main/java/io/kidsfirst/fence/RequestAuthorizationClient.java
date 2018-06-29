@@ -1,22 +1,24 @@
 package io.kidsfirst.fence;
 
-import io.kidsfirst.keys.core.LambdaRequestHandler;
-import lombok.val;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-public class RequestAuthorizationClient extends LambdaRequestHandler {
+public class RequestAuthorizationClient implements RequestStreamHandler {
+
     @Override
-    public String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException {
-
-        val auth_client_info = Utils.auth_client;
-
-        return
-            String.format(
-                    "{\"client_id\": %s,\"redirect_uri\": %s,\"scope\": %s}",
-                    Utils.auth_client.getClientId(),
-                    Utils.auth_client.getRedirectUri(),
-                    Utils.auth_client.getScope()
-            );
+    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
+        outputStream.write(
+                String.format(
+                        "{\"client_id\": \"%s\",\"redirect_uri\": \"%s\",\"scope\": \"%s\"}",
+                        Utils.getAuthClient().getClientId(),
+                        Utils.getAuthClient().getRedirectUri(),
+                        Utils.getAuthClient().getScope()
+                ).getBytes()
+        );
+        outputStream.flush();
+        outputStream.close();
     }
 }

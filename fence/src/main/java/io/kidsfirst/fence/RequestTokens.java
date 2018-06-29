@@ -1,6 +1,5 @@
 package io.kidsfirst.fence;
 
-import com.auth0.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.Scope;
@@ -46,15 +45,15 @@ public class RequestTokens extends LambdaRequestHandler {
 
         val tokens = requestTokens(
                 auth_code,
-                Utils.auth_client.clientId,
-                Utils.auth_client.clientSecret,
+                Utils.getAuthClient().clientId,
+                Utils.getAuthClient().clientSecret,
                 System.getProperty(ENV_FENCE_TOKEN_ENDPOINT),
-                Utils.auth_client.redirectUri,
-                Utils.auth_client.scope
+                Utils.getAuthClient().redirectUri,
+                Utils.getAuthClient().scope
         );
 
         Utils.persistTokens(
-            JWTUtils.getUserId(JWTUtils.parseToken(tokens.getIDTokenString())),
+            JWTUtils.getUserId(JWTUtils.parseToken(tokens.getIDTokenString(), "fence")),
             userId,
             tokens.getAccessToken().getValue(),
             tokens.getRefreshToken().getValue()

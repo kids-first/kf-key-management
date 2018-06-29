@@ -4,7 +4,6 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
-import com.nimbusds.oauth2.sdk.token.Tokens;
 import lombok.val;
 
 import java.util.Optional;
@@ -13,24 +12,28 @@ import static io.kidsfirst.fence.Constants.*;
 
 public class Utils {
 
-    public static DynamoDB dynamo_db = DynamoDBHolder.db;
+    public static DynamoDB getDynamoDB() {
+        return DynamoDBHolder.db;
+    }
 
     private static class DynamoDBHolder {
         static final DynamoDB db = new DynamoDB(AmazonDynamoDBClientBuilder.standard().withRegion(Regions.US_EAST_1).build());
     }
-    
-    public static AuthorizationClient auth_client = AuthorizationClientHolder.instance;
+
+    public static AuthorizationClient getAuthClient() {
+        return AuthorizationClientHolder.instance;
+    }
 
     private static class AuthorizationClientHolder {
         static final AuthorizationClient instance = computeValue();
         static AuthorizationClient computeValue() {
 
-            val outcome = dynamo_db.batchGetItem(
-                    new TableKeysAndAttributes(auth_client_table_name).withPrimaryKeys(new PrimaryKey(FIELD_NAME_OF_OPENID_PROVIDER, openid_provider)).withAttributeNames(FIELD_NAME_OF_CLIENT_ID, FIELD_NAME_OF_REDIRECT_URI, FIELD_NAME_OF_SCOPE, FIELD_NAME_OF_CLIENT_SECRET)
+            val outcome = getDynamoDB().batchGetItem(
+                    new TableKeysAndAttributes(geAuthorizationClientTableName()).withPrimaryKeys(new PrimaryKey(FIELD_NAME_OF_OPENID_PROVIDER, getOpenIdProvider())).withAttributeNames(FIELD_NAME_OF_CLIENT_ID, FIELD_NAME_OF_REDIRECT_URI, FIELD_NAME_OF_SCOPE, FIELD_NAME_OF_CLIENT_SECRET)
             );
 
             return
-                outcome.getTableItems().get(auth_client_table_name).stream().reduce(
+                outcome.getTableItems().get(geAuthorizationClientTableName()).stream().reduce(
                         new AuthorizationClient(),
                         (ac, item) -> {
                             ac.setClientId(Optional.of( item.getString(FIELD_NAME_OF_CLIENT_ID) ).orElse(null));
@@ -45,28 +48,36 @@ public class Utils {
         }
     }
 
-    public static String auth_client_table_name = geAuthorizationClientTableName();
-
-    public static String tokens_table_name = getTokensTableName();
-
-    public static String openid_provider = getOpenIdProvider();
-
     private static String getOpenIdProvider() {
         return DEFAULT_OPENID_PROVIDER;
     }
 
-    private static String geAuthorizationClientTableName(){
-        return Optional.of(System.getProperty(ENV_CLIENT_INFO_TABLE_NAME)).orElse(DEFAULT_CLIENT_INFO_TABLE_NAME);
+    private static class AuthorizationClienTableNameHolder{
+        static final String table = computeValue();
+        static String computeValue() {
+            return Optional.ofNullable(System.getProperty(ENV_AUTH_CLIENT_TABLE_NAME)).orElse(DEFAULT_CLIENT_INFO_TABLE_NAME);
+        }
     }
 
-    private static String getTokensTableName() {
-        return Optional.of(System.getProperty(ENV_TOKEN_TABLE_NAME)).orElse(DEFAULT_TOKEN_TABLE_NAME);
+    private static String geAuthorizationClientTableName(){
+        return AuthorizationClienTableNameHolder.table;
+    }
+
+    private static class TokenTableNameHolder{
+        static final String table = computeValue();
+        static String computeValue() {
+            return Optional.ofNullable(System.getProperty(ENV_TOKEN_TABLE_NAME)).orElse(DEFAULT_TOKEN_TABLE_NAME);
+        }
+    }
+
+    private static String getTokenTableName() {
+        return TokenTableNameHolder.table;
     }
 
     public static void persistTokens(String userid_in_fence, String userid_in_ego, String access_token, String refresh_token) {
 
-        dynamo_db.batchWriteItem(
-                new TableWriteItems(tokens_table_name)
+        getDynamoDB().batchWriteItem(
+                new TableWriteItems(getTokenTableName())
                         .withItemsToPut(
                                 new Item()
                                         .withPrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego)
@@ -79,7 +90,7 @@ public class Utils {
 
     public static void updateTokens(String userid_in_ego, String access_token, String refresh_token) {
 
-        dynamo_db.getTable(tokens_table_name).updateItem(
+        getDynamoDB().getTable(getTokenTableName()).updateItem(
                 new UpdateItemSpec()
                         .withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego))
                         .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_ACCESS_TOKEN).put(access_token))
@@ -89,14 +100,14 @@ public class Utils {
 
     public static KfTokens retrieveTokens(String userid_in_ego) {
         val outcome =
-                dynamo_db.batchGetItem(
-                        new TableKeysAndAttributes(tokens_table_name).withPrimaryKeys(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego)).withAttributeNames(FIELD_NAME_OF_USER_ID_IN_FENCE, FIELD_NAME_OF_ACCESS_TOKEN, FIELD_NAME_OF_REFRESH_TOKEN)
+                getDynamoDB().batchGetItem(
+                        new TableKeysAndAttributes(getTokenTableName()).withPrimaryKeys(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego)).withAttributeNames(FIELD_NAME_OF_USER_ID_IN_FENCE, FIELD_NAME_OF_ACCESS_TOKEN, FIELD_NAME_OF_REFRESH_TOKEN)
                 );
 
         val tokens = new KfTokens();
         tokens.setUserid_in_ego(userid_in_ego);
         return
-            outcome.getTableItems().get(tokens_table_name).stream().reduce(
+            outcome.getTableItems().get(getTokenTableName()).stream().reduce(
                     tokens,
                     (t, item) -> {
                         t.setUserid_in_fence(Optional.of(item.getString(FIELD_NAME_OF_USER_ID_IN_FENCE)).orElse(null));
