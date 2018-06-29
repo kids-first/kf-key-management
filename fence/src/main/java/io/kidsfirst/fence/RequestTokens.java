@@ -29,16 +29,6 @@ public class RequestTokens extends LambdaRequestHandler {
     public String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException {
 
         JSONParser parser = new JSONParser();
-        JSONObject headers = (JSONObject) parser.parse((String) event.get("headers"));
-        val cookies =
-            Stream.of( headers.get("cookie").toString().split(";") )
-                .map(item -> item.split("="))
-                .collect(
-                    Collectors.toMap(
-                            (kv) -> kv[0],
-                            (kv) -> kv[1]
-                    )
-                );
 
         JSONObject queryParas = (JSONObject) parser.parse(event.get("queryStringParameters").toString());
         val auth_code = queryParas.get("code").toString();
