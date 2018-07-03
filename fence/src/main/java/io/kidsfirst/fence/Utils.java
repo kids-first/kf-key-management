@@ -53,25 +53,25 @@ public class Utils {
     }
 
     private static class AuthorizationClienTableNameHolder{
-        static final String table = computeValue();
+        static final String tableName = computeValue();
         static String computeValue() {
             return Optional.ofNullable(System.getProperty(ENV_AUTH_CLIENT_TABLE_NAME)).orElse(DEFAULT_CLIENT_INFO_TABLE_NAME);
         }
     }
 
     private static String geAuthorizationClientTableName(){
-        return AuthorizationClienTableNameHolder.table;
+        return AuthorizationClienTableNameHolder.tableName;
     }
 
     private static class TokenTableNameHolder{
-        static final String table = computeValue();
+        static final String tableName = computeValue();
         static String computeValue() {
             return Optional.ofNullable(System.getProperty(ENV_TOKEN_TABLE_NAME)).orElse(DEFAULT_TOKEN_TABLE_NAME);
         }
     }
 
     private static String getTokenTableName() {
-        return TokenTableNameHolder.table;
+        return TokenTableNameHolder.tableName;
     }
 
     public static void persistTokens(String userid_in_fence, String userid_in_ego, String access_token, String refresh_token) {
@@ -94,6 +94,11 @@ public class Utils {
                 new UpdateItemSpec()
                         .withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego))
                         .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_ACCESS_TOKEN).put(access_token))
+        );
+
+        getDynamoDB().getTable(getTokenTableName()).updateItem(
+                new UpdateItemSpec()
+                        .withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego))
                         .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_REFRESH_TOKEN).put(refresh_token))
         );
     }

@@ -19,8 +19,6 @@ import org.json.simple.parser.ParseException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.kidsfirst.fence.Constants.ENV_FENCE_TOKEN_ENDPOINT;
 
