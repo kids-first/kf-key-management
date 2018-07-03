@@ -5,7 +5,7 @@ public interface Constants {
     String ENV_FENCE_TOKEN_ENDPOINT = "fence_token_endpoint";
     String ENV_TOKEN_TABLE_NAME = "token_table_name";
     String DEFAULT_CLIENT_INFO_TABLE_NAME = "kf_auth_client";
-    String DEFAULT_TOKEN_TABLE_NAME = "kf_token";
+    String DEFAULT_TOKEN_TABLE_NAME = "kf_tokens";
     String FIELD_NAME_OF_CLIENT_ID = "client_id";
     String FIELD_NAME_OF_REDIRECT_URI = "redirect_uri";
     String FIELD_NAME_OF_SCOPE = "scope";
