@@ -28,14 +28,17 @@ public class RequestTokens extends LambdaRequestHandler {
 
         JSONParser parser = new JSONParser();
 
-        JSONObject queryParas = (JSONObject) parser.parse(event.get("queryStringParameters").toString());
-        val auth_code = queryParas.get("code").toString();
+        Object strQueryPara = event.get("queryStringParameters");
+
+        JSONObject queryParas = (JSONObject) parser.parse(strQueryPara.toString());
+
+        val auth_code = queryParas.get("code");
 
         val tokens = requestTokens(
-                auth_code,
+                auth_code.toString(),
                 Utils.getAuthClient().clientId,
                 Utils.getAuthClient().clientSecret,
-                System.getProperty(ENV_FENCE_TOKEN_ENDPOINT),
+                System.getenv(ENV_FENCE_TOKEN_ENDPOINT),
                 Utils.getAuthClient().redirectUri,
                 Utils.getAuthClient().scope
         );
@@ -47,7 +50,7 @@ public class RequestTokens extends LambdaRequestHandler {
             tokens.getRefreshToken().getValue()
         );
 
-        return null;
+        return String.format("{\"access_token\":\"%s\", \"refresh_token\":\"%s\", \"id_token\":\"%s\"}", tokens.getAccessToken().getValue(), tokens.getRefreshToken().getValue(), tokens.getIDTokenString());
     }
 
 

@@ -29,12 +29,12 @@ public class RefreshTokens extends LambdaRequestHandler {
                         retrieveTokens(userId).refresh_token,
                         Utils.getAuthClient().clientId,
                         Utils.getAuthClient().clientSecret,
-                        System.getProperty(ENV_FENCE_TOKEN_ENDPOINT)
+                        System.getenv(ENV_FENCE_TOKEN_ENDPOINT)
                 );
 
         updateTokens(userId, tokens.getAccessToken().getValue(), tokens.getRefreshToken().getValue());
 
-        return tokens.getAccessToken().getValue();
+        return String.format("{\"access_token\":\"%s\", \"refresh_token\":\"%s\"}", tokens.getAccessToken().getValue(), tokens.getRefreshToken().getValue());
     }
 
     public Tokens refreshTokens(String refresh_token, String client_id, String client_secret, String token_endpoint) {
