@@ -25,5 +25,13 @@ pipeline {
         '''
       }
     }
+    
+    stage('Deploy to Dev - keys-get') {
+      steps {
+        sh '''
+        kf-key-management-config/ci-scripts/deploy/deploy.sh dev keys-get
+        '''
+      }
+    }
   }
 }
