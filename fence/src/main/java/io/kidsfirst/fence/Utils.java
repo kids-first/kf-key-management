@@ -30,11 +30,11 @@ public class Utils {
         static AuthorizationClient computeValue() {
 
             val outcome = getDynamoDB().batchGetItem(
-                    new TableKeysAndAttributes(geAuthorizationClientTableName()).withPrimaryKeys(new PrimaryKey(FIELD_NAME_OF_OPENID_PROVIDER, getOpenIdProvider())).withAttributeNames(FIELD_NAME_OF_CLIENT_ID, FIELD_NAME_OF_REDIRECT_URI, FIELD_NAME_OF_SCOPE, FIELD_NAME_OF_CLIENT_SECRET)
+                    new TableKeysAndAttributes(getAuthorizationClientTableName()).withPrimaryKeys(new PrimaryKey(FIELD_NAME_OF_OPENID_PROVIDER, getOpenIdProvider())).withAttributeNames(FIELD_NAME_OF_CLIENT_ID, FIELD_NAME_OF_REDIRECT_URI, FIELD_NAME_OF_SCOPE, FIELD_NAME_OF_CLIENT_SECRET)
             );
 
             return
-                outcome.getTableItems().get(geAuthorizationClientTableName()).stream().reduce(
+                outcome.getTableItems().get(getAuthorizationClientTableName()).stream().reduce(
                         new AuthorizationClient(),
                         (ac, item) -> {
                             ac.setClientId(Optional.of( item.getString(FIELD_NAME_OF_CLIENT_ID) ).orElse(null));
@@ -60,7 +60,7 @@ public class Utils {
         }
     }
 
-    private static String geAuthorizationClientTableName(){
+    private static String getAuthorizationClientTableName(){
         return AuthorizationClienTableNameHolder.tableName;
     }
 
@@ -75,6 +75,23 @@ public class Utils {
         return TokenTableNameHolder.tableName;
     }
 
+    private static class KmsEnabledHolder {
+        static final Boolean kmsEnabled = computeValue();
+        static Boolean computeValue() {
+            String env = System.getenv(ENV_KMS_ENABLED);
+            if(env == null){
+                return true;
+            }
+            else{
+                return Boolean.valueOf(env);
+            }
+        }
+    }
+
+    private static Boolean isKmsEnabled() {
+        return KmsEnabledHolder.kmsEnabled;
+    }
+
     public static void persistTokens(String userid_in_fence, String userid_in_ego, String access_token, String refresh_token) {
 
         getDynamoDB().batchWriteItem(
@@ -83,8 +100,8 @@ public class Utils {
                                 new Item()
                                         .withPrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego)
                                         .withString(FIELD_NAME_OF_USER_ID_IN_FENCE, userid_in_fence)
-                                        .withString(FIELD_NAME_OF_ACCESS_TOKEN, access_token)
-                                        .withString(FIELD_NAME_OF_REFRESH_TOKEN, refresh_token)
+                                        .withString(FIELD_NAME_OF_ACCESS_TOKEN, encrypt(access_token))
+                                        .withString(FIELD_NAME_OF_REFRESH_TOKEN, encrypt(refresh_token))
                         )
         );
     }
@@ -94,13 +111,13 @@ public class Utils {
         getDynamoDB().getTable(getTokenTableName()).updateItem(
                 new UpdateItemSpec()
                         .withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego))
-                        .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_ACCESS_TOKEN).put(access_token))
+                        .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_ACCESS_TOKEN).put(encrypt(access_token)))
         );
 
         getDynamoDB().getTable(getTokenTableName()).updateItem(
                 new UpdateItemSpec()
                         .withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego))
-                        .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_REFRESH_TOKEN).put(refresh_token))
+                        .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_REFRESH_TOKEN).put(encrypt(refresh_token)))
         );
     }
 
@@ -117,8 +134,8 @@ public class Utils {
                     tokens,
                     (t, item) -> {
                         t.setUserid_in_fence(Optional.of(item.getString(FIELD_NAME_OF_USER_ID_IN_FENCE)).orElse(null));
-                        t.setAccess_token(Optional.of(item.getString(FIELD_NAME_OF_ACCESS_TOKEN)).orElse(null));
-                        t.setRefresh_token(Optional.of(item.getString(FIELD_NAME_OF_REFRESH_TOKEN)).orElse(null));
+                        t.setAccess_token(decrypt( Optional.of(item.getString(FIELD_NAME_OF_ACCESS_TOKEN)).orElse(null)));
+                        t.setRefresh_token(decrypt( Optional.of(item.getString(FIELD_NAME_OF_REFRESH_TOKEN)).orElse(null)));
                         return t;
                     },
                     (l, r) -> null
@@ -126,11 +143,17 @@ public class Utils {
     }
 
     private static String encrypt(String token) {
-        return KMSUtils.encrypt(token);
+        if(isKmsEnabled())
+            return KMSUtils.encrypt(token);
+        else
+            return token;
     }
 
     private static String decrypt(String cipher) {
-        return KMSUtils.decrypt(cipher);
+        if (isKmsEnabled())
+            return KMSUtils.decrypt(cipher);
+        else
+            return cipher;
     }
 
 }

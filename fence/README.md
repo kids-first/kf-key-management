@@ -8,6 +8,7 @@ There are 4 Lambda functions defined in this module
 
     * `ego_public`: ego public key
     * `token_table_name`: DynamoDB table name for tokens, the default value is `kf_tokens`
+    * `kms_enabled`: whether to enable kms encryption/decryption. If the variable is missing, by default disable kms functionanlity
 
 * HTTP Header
 
@@ -43,6 +44,7 @@ There are 4 Lambda functions defined in this module
      * `fence_public`: fence public key
      * `fence_token_endpoint`: fence token endpoint, the default value is `https://gen3qa.kids-first.io/user/oauth2/token`
      * `token_table_name`: DynamoDB table name for tokens, the default value is `kf_tokens`
+     * `kms_enabled`: whether to enable kms encryption/decryption. If the variable is missing, by default disable kms functionanlity
      
  * Dynamo DB
  
@@ -68,6 +70,7 @@ There are 4 Lambda functions defined in this module
      * `fence_public`: fence public key
      * `fence_token_endpoint`: fence token endpoint, the default value is `https://gen3qa.kids-first.io/user/oauth2/token`
      * `token_table_name`: DynamoDB table name for tokens, the default value is `kf_tokens`
+     * `kms_enabled`: whether to enable kms encryption/decryption. If the variable is missing, by default disable kms functionanlity
      
  * Dynamo DB
  

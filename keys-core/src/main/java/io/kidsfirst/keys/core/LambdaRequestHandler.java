@@ -95,7 +95,8 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
       String auth = (String)((JSONObject)event.get("headers")).getOrDefault("Authorization","");
 
       // Process header, will throw error if authorization fails
-      Jwt authToken = JWTUtils.parseToken(auth.replace("Bearer ", ""));
+      String token = auth.replace("Bearer ", "");
+      Jwt authToken = JWTUtils.parseToken(token, "ego");
 
       return JWTUtils.getUserId(authToken);
 
