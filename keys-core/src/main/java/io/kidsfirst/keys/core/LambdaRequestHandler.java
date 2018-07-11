@@ -88,10 +88,24 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
     }
   }
 
+//  private static JSONObject formatException(Exception e) {
+//    JSONObject output = new JSONObject();
+//    output.put("error", e.getClass().getSimpleName());
+//    output.put("message", e.getMessage());
+//    return output;
+//  }
+
   private static JSONObject formatException(Exception e) {
     JSONObject output = new JSONObject();
     output.put("error", e.getClass().getSimpleName());
     output.put("message", e.getMessage());
+
+    StringBuffer sb = new StringBuffer();
+    for(StackTraceElement ste: e.getStackTrace()){
+      sb.append(ste.getClassName() + "." + ste.getMethodName() + ": " + ste.getLineNumber() + "\n");
+    }
+    output.put("stack", sb.toString());
+
     return output;
   }
 
