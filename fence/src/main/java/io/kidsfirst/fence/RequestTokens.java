@@ -24,7 +24,7 @@ import static io.kidsfirst.fence.Constants.ENV_FENCE_TOKEN_ENDPOINT;
 
 public class RequestTokens extends LambdaRequestHandler {
     @Override
-    public String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException {
+    public String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException, NullPointerException {
 
         JSONParser parser = new JSONParser();
 
