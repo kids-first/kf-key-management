@@ -29,39 +29,14 @@ public class Utils {
         static final AuthorizationClient instance = computeValue();
         static AuthorizationClient computeValue() {
 
-            val outcome = getDynamoDB().batchGetItem(
-                    new TableKeysAndAttributes(getAuthorizationClientTableName()).withPrimaryKeys(new PrimaryKey(FIELD_NAME_OF_OPENID_PROVIDER, getOpenIdProvider())).withAttributeNames(FIELD_NAME_OF_CLIENT_ID, FIELD_NAME_OF_REDIRECT_URI, FIELD_NAME_OF_SCOPE, FIELD_NAME_OF_CLIENT_SECRET)
-            );
 
-            return
-                outcome.getTableItems().get(getAuthorizationClientTableName()).stream().reduce(
-                        new AuthorizationClient(),
-                        (ac, item) -> {
-                            ac.setClientId(Optional.of( item.getString(FIELD_NAME_OF_CLIENT_ID) ).orElse(null));
-                            ac.setClientSecret(Optional.of(item.getString(FIELD_NAME_OF_CLIENT_SECRET)).orElse(null));
-                            ac.setRedirectUri(Optional.of(item.getString(FIELD_NAME_OF_REDIRECT_URI)).orElse(null));
-                            ac.setScope(Optional.of(item.getString(FIELD_NAME_OF_SCOPE)).orElse(null));
-
-                            return ac;
-                        },
-                        (l, r) -> null
-                );
+            val ac =  new AuthorizationClient();
+            ac.setClientId(System.getenv(FIELD_NAME_OF_CLIENT_ID));
+            ac.setClientSecret(System.getenv(FIELD_NAME_OF_CLIENT_SECRET));
+            ac.setRedirectUri(System.getenv(FIELD_NAME_OF_REDIRECT_URI));
+            ac.setScope(System.getenv(FIELD_NAME_OF_SCOPE));
+            return ac;
         }
-    }
-
-    private static String getOpenIdProvider() {
-        return DEFAULT_OPENID_PROVIDER;
-    }
-
-    private static class AuthorizationClienTableNameHolder{
-        static final String tableName = computeValue();
-        static String computeValue() {
-            return Optional.ofNullable(System.getProperty(ENV_AUTH_CLIENT_TABLE_NAME)).orElse(DEFAULT_CLIENT_INFO_TABLE_NAME);
-        }
-    }
-
-    private static String getAuthorizationClientTableName(){
-        return AuthorizationClienTableNameHolder.tableName;
     }
 
     private static class TokenTableNameHolder{

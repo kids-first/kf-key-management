@@ -26,7 +26,10 @@ There are 4 Lambda functions defined in this module
 
  * Environment Variables
  
-     * `auth_client_table_name`: DynamoDB table name for auth client information, the default value is `kf_auth_client`
+     * `client_id`: kids-first portal's client id assigned by FENCE
+     * `client_secret`: kids-first portal's client secret assigned by FENCE
+     * `redirect_uri`: kids-first portal's redirect_uri required by FENCE
+     * `scope`: kids-first portal's scope accepted by FENCE
      
  * Dynamo DB
  
@@ -39,12 +42,15 @@ There are 4 Lambda functions defined in this module
 
  * Environment Variables
  
-     * `auth_client_table_name`: DynamoDB table name for auth client information, the default value is `kf_auth_client`
      * `ego_public`: ego public key
      * `fence_public`: fence public key
      * `fence_token_endpoint`: fence token endpoint, the default value is `https://gen3qa.kids-first.io/user/oauth2/token`
      * `token_table_name`: DynamoDB table name for tokens, the default value is `kf_tokens`
      * `kms_enabled`: whether to enable kms encryption/decryption. If the variable is missing, by default disable kms functionanlity
+     * `client_id`: kids-first portal's client id assigned by FENCE
+     * `client_secret`: kids-first portal's client secret assigned by FENCE
+     * `redirect_uri`: kids-first portal's redirect_uri required by FENCE
+     * `scope`: kids-first portal's scope accepted by FENCE
      
  * Dynamo DB
  
@@ -65,12 +71,15 @@ There are 4 Lambda functions defined in this module
 
 * Environment Variables
  
-     * `auth_client_table_name`: DynamoDB table name for auth client information, the default value is `kf_auth_client`
      * `ego_public`: ego public key
      * `fence_public`: fence public key
      * `fence_token_endpoint`: fence token endpoint, the default value is `https://gen3qa.kids-first.io/user/oauth2/token`
      * `token_table_name`: DynamoDB table name for tokens, the default value is `kf_tokens`
      * `kms_enabled`: whether to enable kms encryption/decryption. If the variable is missing, by default disable kms functionanlity
+     * `client_id`: kids-first portal's client id assigned by FENCE
+     * `client_secret`: kids-first portal's client secret assigned by FENCE
+     * `redirect_uri`: kids-first portal's redirect_uri required by FENCE
+     * `scope`: kids-first portal's scope accepted by FENCE     
      
  * Dynamo DB
  
