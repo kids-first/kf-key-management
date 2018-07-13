@@ -31,8 +31,8 @@ public class Utils {
 
 
             val ac =  new AuthorizationClient();
-            ac.setClientId(System.getenv(ENV_FENCE_CLIENT_ID));
-            ac.setClientSecret(System.getenv(ENV_FENCE_CLIENT_SECRET));
+            ac.setClientId(decrypt(System.getenv(ENV_FENCE_CLIENT_ID)));
+            ac.setClientSecret(decrypt(System.getenv(ENV_FENCE_CLIENT_SECRET)));
             ac.setRedirectUri(System.getenv(ENV_FENCE_REDIRECT_URI));
             ac.setScope(System.getenv(ENV_FENCE_SCOPE));
             return ac;

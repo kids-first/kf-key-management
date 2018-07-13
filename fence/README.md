@@ -9,6 +9,7 @@ There are 4 Lambda functions defined in this module
     * `ego_public`: ego public key
     * `token_table_name`: DynamoDB table name for tokens, the default value is `kf_tokens`
     * `kms_enabled`: whether to enable kms encryption/decryption. If the variable is missing, by default disable kms functionanlity
+    * `kms`: KMS encryption key
 
 * HTTP Header
 
@@ -30,6 +31,8 @@ There are 4 Lambda functions defined in this module
      * `fence_client_secret`: kids-first portal's client secret assigned by FENCE
      * `fence_redirect_uri`: kids-first portal's redirect_uri required by FENCE
      * `fence_scope`: kids-first portal's scope accepted by FENCE
+     * `kms_enabled`: whether to enable kms encryption/decryption. If the variable is missing, by default disable kms functionanlity
+     * `kms`: KMS encryption key
      
  * Dynamo DB
  
@@ -47,6 +50,7 @@ There are 4 Lambda functions defined in this module
      * `fence_token_endpoint`: fence token endpoint, the default value is `https://gen3qa.kids-first.io/user/oauth2/token`
      * `token_table_name`: DynamoDB table name for tokens, the default value is `kf_tokens`
      * `kms_enabled`: whether to enable kms encryption/decryption. If the variable is missing, by default disable kms functionanlity
+     * `kms`: KMS encryption key
      * `fence_client_id`: kids-first portal's client id assigned by FENCE
      * `fence_client_secret`: kids-first portal's client secret assigned by FENCE
      * `fence_redirect_uri`: kids-first portal's redirect_uri required by FENCE
@@ -76,6 +80,7 @@ There are 4 Lambda functions defined in this module
      * `fence_token_endpoint`: fence token endpoint, the default value is `https://gen3qa.kids-first.io/user/oauth2/token`
      * `token_table_name`: DynamoDB table name for tokens, the default value is `kf_tokens`
      * `kms_enabled`: whether to enable kms encryption/decryption. If the variable is missing, by default disable kms functionanlity
+     * `kms`: KMS encryption key    
      * `fence_client_id`: kids-first portal's client id assigned by FENCE
      * `fence_client_secret`: kids-first portal's client secret assigned by FENCE
      * `fence_redirect_uri`: kids-first portal's redirect_uri required by FENCE
