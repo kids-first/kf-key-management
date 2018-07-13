@@ -26,10 +26,23 @@ pipeline {
       }
     }
     
-    stage('Deploy to Dev - keys-get') {
+    stage('Deploy to Dev') {
       steps {
         sh '''
-        kf-key-management-config/ci-scripts/deploy/deploy.sh dev keys-get
+        kf-key-management-config/ci-scripts/deploy/deploy.sh dev
+        '''
+      }
+    }
+
+    stage('Deploy to QA') {
+      when {
+        expression {
+          return env.BRANCH_NAME == 'master';
+        }
+      }
+      steps {
+        sh '''
+        kf-key-management-config/ci-scripts/deploy/deploy.sh qa
         '''
       }
     }
