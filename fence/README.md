@@ -31,8 +31,6 @@ There are 4 Lambda functions defined in this module
      * `fence_client_secret`: kids-first portal's client secret assigned by FENCE
      * `fence_redirect_uri`: kids-first portal's redirect_uri required by FENCE
      * `fence_scope`: kids-first portal's scope accepted by FENCE
-     * `kms_enabled`: whether to enable kms encryption/decryption. If the variable is missing, by default disable kms functionanlity
-     * `kms`: KMS encryption key
      
  * Dynamo DB
  
