@@ -46,5 +46,48 @@ pipeline {
         '''
       }
     }
+
+    stage("Promote to PRD") {
+      when {
+        expression {
+          return env.BRANCH_NAME == 'master' || ( tag != '' & env.BRANCH_NAME == tag);
+        }
+        expression {
+          return tag != '';
+        }
+      }
+      steps {
+        script {
+          env.DEPLOY_TO_PRD = input message: 'User input required',
+            submitter: 'eubankj,vermar,andricd',
+            parameters: [choice(name: 'Deploy to PRD Environment', choices: 'no\nyes', description: 'Choose "yes" if you want to deploy the PRD tables')]
+        }
+      }
+    }
+
+    stage('Deploy To PRD') {
+      when {
+        environment name: 'DEPLOY_TO_PRD', value: 'yes'
+        expression {
+           return env.BRANCH_NAME == 'master' || ( tag != '' & env.BRANCH_NAME == tag);
+        }
+        expression {
+          return tag != '';
+        }
+      }
+
+      steps {
+        slackSend (color: '#FFFF00', message: "Starting to deploy kf-key-management to PRD: Branch '${env.BRANCH} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        sh '''
+          kf-key-management-config/ci-scripts/deploy/deploy.sh prd
+        '''
+        slackSend (color: '#00FF00', message: ":smile: kf-key-management Deployed to PRD: Branch '${env.BRANCH} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+      }
+      post {
+        failure {
+          slackSend (color: '#ff0000', message: ":frowning: kf-key-management Deployed to PRD` Failed: Branch '${env.BRANCH} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        }
+      }
+    }
   }
 }
