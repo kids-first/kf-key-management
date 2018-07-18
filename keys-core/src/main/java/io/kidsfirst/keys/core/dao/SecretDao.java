@@ -17,6 +17,8 @@
 package io.kidsfirst.keys.core.dao;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.TableNameOverride;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -33,7 +35,9 @@ public class SecretDao {
 
   private static volatile SecretDao instance;
 
-
+  // Specify the secret-table name as override to pass to mapper
+  // FIXME: Deprecated method call, need to refactor to mapper definition out of manager
+  private static final DynamoDBMapperConfig mapperConfigOverride = new DynamoDBMapperConfig(new TableNameOverride(System.getenv("secret_table")));
   private SecretDao() { }
 
   public static SecretDao instance() {
@@ -48,7 +52,7 @@ public class SecretDao {
   }
 
   public static List<Secret> findAllSecrets() {
-    return mapper.scan(Secret.class, new DynamoDBScanExpression());
+    return mapper.scan(Secret.class, new DynamoDBScanExpression(), mapperConfigOverride);
   }
 
   public static List<Secret> getSecret(String service, String userId) {
@@ -61,16 +65,16 @@ public class SecretDao {
       .withKeyConditionExpression("userId = :val1 and service = :val2")
       .withExpressionAttributeValues(eav);
 
-    return mapper.query(Secret.class, queryExpression);
+    return mapper.query(Secret.class, queryExpression, mapperConfigOverride);
   }
 
   public static void deleteSecret(String service, String userId) {
     List<Secret> matchingSecrets =  getSecret(service, userId);
-    matchingSecrets.forEach(mapper::delete);
+    matchingSecrets.forEach(match->mapper.delete(match, mapperConfigOverride));
   }
 
   public static void saveOrUpdateSecret(Secret secret) {
-    mapper.save(secret);
+    mapper.save(secret, mapperConfigOverride);
   }
 
 }

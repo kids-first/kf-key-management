@@ -32,6 +32,7 @@ public class DynamoDBManager {
     AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClient.builder();
     builder.setRegion(Regions.US_EAST_1.getName());
     mapper = new DynamoDBMapper(builder.build());
+
   }
 
   public static DynamoDBManager instance() {
