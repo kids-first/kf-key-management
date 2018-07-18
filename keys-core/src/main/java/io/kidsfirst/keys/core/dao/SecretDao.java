@@ -36,13 +36,7 @@ public class SecretDao {
   private static volatile SecretDao instance;
 
   // Specify the secret-table name as override to pass to mapper
-//  private static final DynamoDBMapperConfig mapperConfigOverride = new DynamoDBMapperConfig(new TableNameOverride(System.getenv("secret_table")));
-  private static final DynamoDBMapperConfig mapperConfigOverride = new DynamoDBMapperConfig(new DynamoDBMapperConfig.DefaultTableNameResolver() {
-    @Override
-    public String getTableName(Class<?> aClass, DynamoDBMapperConfig dynamoDBMapperConfig) {
-      return System.getenv("secret_table");
-    }
-  }));
+  private static final DynamoDBMapperConfig mapperConfigOverride = new DynamoDBMapperConfig(new TableNameOverride(System.getenv("secret_table")));
   private SecretDao() { }
 
   public static SecretDao instance() {
