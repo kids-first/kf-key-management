@@ -36,6 +36,7 @@ public class SecretDao {
   private static volatile SecretDao instance;
 
   // Specify the secret-table name as override to pass to mapper
+  // FIXME: Deprecated method call, need to refactor to mapper definition out of manager
   private static final DynamoDBMapperConfig mapperConfigOverride = new DynamoDBMapperConfig(new TableNameOverride(System.getenv("secret_table")));
   private SecretDao() { }
 
