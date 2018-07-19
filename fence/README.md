@@ -94,3 +94,21 @@ There are 4 Lambda functions defined in this module
 
  * Return  
      `{"access_code": "...","refresh_code": "..."}`
+     
+## RemoveTokens
+
+* Environment Variables
+    
+    * `ego_public`: ego public key
+    * `token_table_name`: DynamoDB table name for tokens, the default value is `kf_tokens`
+    
+* Dynamo DB
+
+    * The default table name is `kf_tokens`
+ 
+* HTTP Header
+
+    * Authorization: `Bearer ${ego_user_jwt_token}`
+
+* Return  
+    what ever AWS `DeleteItemOutcome` returns
