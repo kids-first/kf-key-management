@@ -3,6 +3,7 @@ package io.kidsfirst.fence;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.*;
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import io.kidsfirst.keys.core.utils.KMSUtils;
 import lombok.val;
@@ -42,7 +43,7 @@ public class Utils {
     private static class TokenTableNameHolder{
         static final String tableName = computeValue();
         static String computeValue() {
-            return Optional.ofNullable(System.getProperty(ENV_TOKEN_TABLE_NAME)).orElse(DEFAULT_TOKEN_TABLE_NAME);
+            return Optional.ofNullable(System.getenv(ENV_TOKEN_TABLE_NAME)).orElse(DEFAULT_TOKEN_TABLE_NAME);
         }
     }
 
@@ -115,6 +116,14 @@ public class Utils {
                     },
                     (l, r) -> null
             );
+    }
+
+    public static String removeTokens(String userid_in_ego) {
+
+        val table = getDynamoDB().getTable(getTokenTableName());
+        val deleteItemSpec = new DeleteItemSpec().withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego));
+        val outcome = getDynamoDB().getTable(getTokenTableName()).deleteItem(deleteItemSpec);
+        return outcome.getDeleteItemResult().toString();
     }
 
     private static String encrypt(String token) {
