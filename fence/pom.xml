@@ -68,6 +68,7 @@
                 <version>2.3</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <finalName>uber-${artifactId}-${version}</finalName>
                 </configuration>
                 <executions>
                     <execution>
