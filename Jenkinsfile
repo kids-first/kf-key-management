@@ -7,6 +7,10 @@ pipeline {
       steps {
         deleteDir()
         checkout scm
+        script {
+          tag=sh(returnStdout: true, script: "git tag -l --points-at HEAD").trim()
+          env.tag = tag
+        }
       }
     }
     stage('GetOpsScripts') {
