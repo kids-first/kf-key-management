@@ -12,8 +12,29 @@ import java.util.Map;
 
 public class JWTUtils {
 
-  public static PublicKey getPublicKey() {
-    String publicKeyString = System.getenv("ego_public");
+  public static String getUserId(Jwt token) {
+    // Property 'sub' contains userId:
+    //   body.sub
+
+    Map body     = (Map)    token.getBody();
+    String id    = (String) body.get("sub");
+
+    return id;
+  }
+
+  public static PublicKey getPublicKey(String environment) {
+
+    String publicKeyString;
+    switch (environment) {
+      case "ego":
+        publicKeyString = System.getenv("ego_public");
+        break;
+      case "fence":
+        publicKeyString = System.getenv("fence_public");
+        break;
+      default:
+        return null;
+    }
 
     byte[] publicBytes = Base64.decodeBase64(publicKeyString);
     X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
@@ -31,26 +52,15 @@ public class JWTUtils {
 
   }
 
+  public static Jwt parseToken(String token, String environment) throws
+          SignatureException, ExpiredJwtException, MalformedJwtException, UnsupportedJwtException {
 
-  public static Jwt parseToken (String token) throws
-    SignatureException, ExpiredJwtException, MalformedJwtException, UnsupportedJwtException {
-
-    PublicKey key = getPublicKey();
+    PublicKey key = getPublicKey(environment);
 
     Jwt jwt = Jwts.parser()
-      .setSigningKey(key)
-      .parse(token);
+            .setSigningKey(key)
+            .parse(token);
 
     return jwt;
-  }
-
-  public static String getUserId(Jwt token) {
-    // Property 'sub' contains userId:
-    //   body.sub
-
-    Map body     = (Map)    token.getBody();
-    String id    = (String) body.get("sub");
-
-    return id;
   }
 }

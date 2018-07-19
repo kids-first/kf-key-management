@@ -30,6 +30,7 @@
         <module>keys-get</module>
         <module>keys-put</module>
         <module>cavatica-proxy</module>
+        <module>fence</module>
     </modules>
 
     <dependencyManagement>

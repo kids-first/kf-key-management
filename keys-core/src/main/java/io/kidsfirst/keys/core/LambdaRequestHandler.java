@@ -95,7 +95,8 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
       String auth = (String)((JSONObject)event.get("headers")).getOrDefault("Authorization","");
 
       // Process header, will throw error if authorization fails
-      Jwt authToken = JWTUtils.parseToken(auth.replace("Bearer ", ""));
+      String token = auth.replace("Bearer ", "");
+      Jwt authToken = JWTUtils.parseToken(token, "ego");
 
       return JWTUtils.getUserId(authToken);
 
@@ -105,10 +106,24 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
     }
   }
 
+//  private static JSONObject formatException(Exception e) {
+//    JSONObject output = new JSONObject();
+//    output.put("error", e.getClass().getSimpleName());
+//    output.put("message", e.getMessage());
+//    return output;
+//  }
+
   private static JSONObject formatException(Exception e) {
     JSONObject output = new JSONObject();
     output.put("error", e.getClass().getSimpleName());
     output.put("message", e.getMessage());
+
+    StringBuffer sb = new StringBuffer();
+    for(StackTraceElement ste: e.getStackTrace()){
+      sb.append(ste.getClassName() + "." + ste.getMethodName() + ": " + ste.getLineNumber() + "\n");
+    }
+    output.put("stack", sb.toString());
+
     return output;
   }
 
