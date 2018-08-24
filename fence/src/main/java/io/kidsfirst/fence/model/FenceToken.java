@@ -34,10 +34,10 @@ public class FenceToken implements Serializable {
   @DynamoDBAttribute(attributeName = FIELD_NAME_OF_USER_ID_IN_FENCE)
   private String fenceUserId;
 
-  @DynamoDBRangeKey(attributeName = FIELD_NAME_OF_ACCESS_TOKEN)
+  @DynamoDBAttribute(attributeName = FIELD_NAME_OF_ACCESS_TOKEN)
   private String accessToken;
 
-  @DynamoDBRangeKey(attributeName = FIELD_NAME_OF_REFRESH_TOKEN)
+  @DynamoDBAttribute(attributeName = FIELD_NAME_OF_REFRESH_TOKEN)
   private String refreshToken;
 
   public FenceToken() {}
