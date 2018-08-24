@@ -5,6 +5,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import io.kidsfirst.fence.dao.FenceTokenDao;
+import io.kidsfirst.fence.model.FenceToken;
 import io.kidsfirst.keys.core.utils.KMSUtils;
 import lombok.val;
 
@@ -29,7 +31,6 @@ public class Utils {
     private static class AuthorizationClientHolder {
         static final AuthorizationClient instance = computeValue();
         static AuthorizationClient computeValue() {
-
 
             val ac =  new AuthorizationClient();
             ac.setClientId(System.getenv(ENV_FENCE_CLIENT_ID));
@@ -69,17 +70,15 @@ public class Utils {
     }
 
     public static void persistTokens(String userid_in_fence, String userid_in_ego, String access_token, String refresh_token) {
-
-        getDynamoDB().batchWriteItem(
-                new TableWriteItems(getTokenTableName())
-                        .withItemsToPut(
-                                new Item()
-                                        .withPrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego)
-                                        .withString(FIELD_NAME_OF_USER_ID_IN_FENCE, userid_in_fence)
-                                        .withString(FIELD_NAME_OF_ACCESS_TOKEN, encrypt(access_token))
-                                        .withString(FIELD_NAME_OF_REFRESH_TOKEN, encrypt(refresh_token))
-                        )
-        );
+        FenceToken token = new FenceToken(userid_in_ego);
+        token.setFenceUserId(userid_in_fence);
+        token.setAccessToken(encrypt(access_token));
+        token.setRefreshToken(encrypt(refresh_token));
+        try {
+            FenceTokenDao.saveOrUpdateSecret(token);
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Exception thrown accessing request data: " + e.getMessage());
+        }
     }
 
     public static void updateTokens(String userid_in_ego, String access_token, String refresh_token) {
