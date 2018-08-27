@@ -18,13 +18,11 @@ package io.kidsfirst.fence.dao;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.TableNameOverride;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import io.kidsfirst.fence.config.MapperConfig;
 import io.kidsfirst.fence.model.FenceToken;
 import io.kidsfirst.keys.core.manager.DynamoDBManager;
-import static io.kidsfirst.fence.Constants.ENV_TOKEN_TABLE_NAME;
 import static io.kidsfirst.fence.Constants.FIELD_NAME_OF_USER_ID_IN_EGO;
 
 import java.util.HashMap;
@@ -37,9 +35,7 @@ public class FenceTokenDao {
 
   private static volatile FenceTokenDao instance;
 
-  // Specify the secret-table name as override to pass to mapper
-  // FIXME: Deprecated method call, need to refactor to mapper definition out of manager
-  private static final DynamoDBMapperConfig mapperConfigOverride = new DynamoDBMapperConfig(new TableNameOverride(System.getenv(ENV_TOKEN_TABLE_NAME)));
+  private static final DynamoDBMapperConfig mapperConfigOverride = MapperConfig.createConfig();
   private FenceTokenDao() { }
 
   public static FenceTokenDao instance() {
