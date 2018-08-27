@@ -3,6 +3,7 @@ package io.kidsfirst.keys.core;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import io.jsonwebtoken.Jwt;
+import io.kidsfirst.keys.core.exception.NotFoundException;
 import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.utils.JWTUtils;
 import org.json.simple.JSONObject;
@@ -59,7 +60,9 @@ public abstract class LambdaRequestHandler implements RequestStreamHandler {
       // JWT/User ID issue, return unauthorized 401
       resp.setStatusCode(HttpURLConnection.HTTP_UNAUTHORIZED);
       data = formatException(e).toJSONString();
-
+    } catch (NotFoundException e) {
+      resp.setStatusCode(HttpURLConnection.HTTP_NOT_FOUND);
+      data = formatException(e).toJSONString();
     } catch (Exception e) {
       // Something unexpected happened - return 500
       resp.setStatusCode(HttpURLConnection.HTTP_INTERNAL_ERROR);

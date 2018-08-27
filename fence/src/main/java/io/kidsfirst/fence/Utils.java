@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import io.kidsfirst.fence.dao.FenceTokenDao;
 import io.kidsfirst.fence.model.FenceToken;
+import io.kidsfirst.fence.model.KfTokens;
 import io.kidsfirst.keys.core.utils.KMSUtils;
 import lombok.val;
 
@@ -65,7 +66,7 @@ public class Utils {
         }
     }
 
-    private static Boolean isKmsEnabled() {
+    public static Boolean isKmsEnabled() {
         return KmsEnabledHolder.kmsEnabled;
     }
 
@@ -125,14 +126,14 @@ public class Utils {
         return outcome.getDeleteItemResult().toString();
     }
 
-    private static String encrypt(String token) {
+    public static String encrypt(String token) {
         if(isKmsEnabled())
             return KMSUtils.encrypt(token);
         else
             return token;
     }
 
-    private static String decrypt(String cipher) {
+    public static String decrypt(String cipher) {
         if (isKmsEnabled())
             return KMSUtils.decrypt(cipher);
         else
