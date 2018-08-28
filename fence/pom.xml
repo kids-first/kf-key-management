@@ -5,7 +5,7 @@
     <parent>
         <artifactId>keys</artifactId>
         <groupId>io.kidsfirst</groupId>
-        <version>1.1.0-SNAPSHOT</version>
+        <version>1.2.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>io.kidsfirst</groupId>
             <artifactId>keys-core</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
