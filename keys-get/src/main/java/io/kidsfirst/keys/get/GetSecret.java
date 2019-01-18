@@ -18,47 +18,46 @@ package io.kidsfirst.keys.get;
 
 import io.kidsfirst.keys.core.LambdaRequestHandler;
 import io.kidsfirst.keys.core.dao.SecretDao;
+import io.kidsfirst.keys.core.model.LambdaRequest;
+import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.model.Secret;
-import io.kidsfirst.keys.core.utils.KMSUtils;
-import org.json.simple.JSONObject;
+import lombok.var;
 
+import java.net.HttpURLConnection;
 import java.util.List;
 
-public class GetSecret extends LambdaRequestHandler{
-
+public class GetSecret extends LambdaRequestHandler {
 
   @Override
-  public String processEvent(JSONObject event, String userId) throws IllegalArgumentException {
+  public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException {
 
-    String service = getService(event);
-    if (service == null) {
-        throw new IllegalArgumentException("Required Field [type] missing in query string.");
+    String userId = request.getUserId();
+
+    String service = request.getQueryStringParameters().getOrDefault("service", null);
+    if (service.isEmpty()) {
+      throw new IllegalArgumentException("Required Query Parameter [service] missing");
     }
 
-    List<Secret> allSecrets = SecretDao.getSecret(service, userId);
+    var resp = new LambdaResponse();
+    resp.addDefaultHeaders();
+    resp.addContentTypeHeader("text/plain");
 
+    List<Secret> allSecrets = SecretDao.getSecret(service, userId);
 
     if (!allSecrets.isEmpty()) {
     Secret secret = allSecrets.get(0);
       // TODO: decrypt secretValue
       String secretValue = secret.getSecret();
-      return KMSUtils.decrypt(secretValue);
+      resp.setBody(secretValue);
+      resp.setStatusCode(HttpURLConnection.HTTP_OK);
 
     } else {
-      // If no data available, empty response
-      return "";
+      resp.setBody("");
+      resp.setStatusCode(HttpURLConnection.HTTP_NO_CONTENT);
 
     }
-  }
 
-  public String getService(JSONObject event) {
-    // 'type' is a query param, passed in the event object:
-    //  event.queryStringParameters.service
-
-    JSONObject queryParam = (JSONObject) event.get("queryStringParameters");
-    String service = (String) queryParam.getOrDefault("service", null);
-
-    return service;
+    return resp;
   }
 
 }
