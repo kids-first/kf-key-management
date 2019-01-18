@@ -27,6 +27,11 @@
 
     <artifactId>keys-core</artifactId>
     <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.0</version>
+        </dependency>
         <!-- Json Web Tokens -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

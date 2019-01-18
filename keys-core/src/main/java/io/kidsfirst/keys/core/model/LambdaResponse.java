@@ -16,71 +16,37 @@
 
 package io.kidsfirst.keys.core.model;
 
-import org.json.simple.JSONObject;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
 import java.util.Map;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class LambdaResponse {
 
-  private boolean isBase64Encoded;
-  private String statusCode;
-  private Map<String, String> headers;
+  private int statusCode;
+  private Map<String, String> headers = new HashMap<>();
   private String body;
 
-  public LambdaResponse() {
+  public void addCorsHeader() {
+    String allowedDomains = System.getenv("corsAllowedDomains");
+    if (allowedDomains == null || allowedDomains.isEmpty()) {
+      allowedDomains = "*";
+    }
+    headers.put("Access-Control-Allow-Origin", allowedDomains);
   }
 
-  public LambdaResponse(boolean isBase64Encoded, String statusCode, Map<String, String> headers, String body) {
-    this.isBase64Encoded = isBase64Encoded;
-    this.statusCode = statusCode;
-    this.headers = headers;
-    this.body = body;
+  public void addContentTypeHeader(final String contentType) {
+    headers.put("Content-Type", contentType);
   }
 
-  public boolean isBase64Encoded() {
-    return isBase64Encoded;
+  public void addDefaultHeaders() {
+    this.addCorsHeader();
+    this.addContentTypeHeader("application/json");
+
   }
-
-  public void setBase64Encoded(boolean base64Encoded) {
-    isBase64Encoded = base64Encoded;
-  }
-
-  public String getStatusCode() {
-    return statusCode;
-  }
-
-  public void setStatusCode(int statusCode) {
-    this.statusCode = Integer.toString(statusCode);
-  }
-
-  public Map<String, String> getHeaders() {
-    return headers;
-  }
-
-  public void setHeaders(Map<String, String> headers) {
-    this.headers = headers;
-  }
-
-  public String getBody() {
-    return body;
-  }
-
-  public void setBody(String body) {
-    this.body = body;
-  }
-
-  public void setBody(JSONObject body) {
-    this.body = body.toJSONString();
-  }
-
-  public JSONObject toJson() {
-    JSONObject json = new JSONObject();
-    json.put("isBase64Encoded", isBase64Encoded);
-    json.put("statusCode", statusCode);
-    json.put("headers", new JSONObject(headers));
-    json.put("body", body);
-
-    return json;
-  }
-
 }
