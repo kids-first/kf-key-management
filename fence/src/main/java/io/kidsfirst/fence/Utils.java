@@ -14,130 +14,128 @@ import static io.kidsfirst.fence.Constants.*;
 
 public class Utils {
 
-    public static DynamoDB getDynamoDB() {
-        return DynamoDBHolder.db;
+  public static DynamoDB getDynamoDB() {
+    return DynamoDBHolder.db;
+  }
+
+  private static class DynamoDBHolder {
+    static final DynamoDB db = new DynamoDB(AmazonDynamoDBClientBuilder.standard().withRegion(Regions.US_EAST_1).build());
+  }
+
+  public static AuthorizationClient getAuthClient() {
+      return AuthorizationClientHolder.instance;
+  }
+
+  private static class AuthorizationClientHolder {
+    static final AuthorizationClient instance = computeValue();
+    static AuthorizationClient computeValue() {
+      val ac =  new AuthorizationClient();
+      ac.setClientId(System.getenv(ENV_FENCE_CLIENT_ID));
+      ac.setClientSecret(System.getenv(ENV_FENCE_CLIENT_SECRET));
+      ac.setRedirectUri(System.getenv(ENV_FENCE_REDIRECT_URI));
+      ac.setScope(System.getenv(ENV_FENCE_SCOPE));
+      return ac;
     }
+  }
 
-    private static class DynamoDBHolder {
-        static final DynamoDB db = new DynamoDB(AmazonDynamoDBClientBuilder.standard().withRegion(Regions.US_EAST_1).build());
+  private static class TokenTableNameHolder{
+    static final String tableName = computeValue();
+    static String computeValue() {
+      return Optional.ofNullable(System.getenv(ENV_TOKEN_TABLE_NAME)).orElse(DEFAULT_TOKEN_TABLE_NAME);
     }
+  }
 
-    public static AuthorizationClient getAuthClient() {
-        return AuthorizationClientHolder.instance;
+  private static String getTokenTableName() {
+      return TokenTableNameHolder.tableName;
+  }
+
+  private static class KmsEnabledHolder {
+    static final Boolean kmsEnabled = computeValue();
+    static Boolean computeValue() {
+      String env = System.getenv(ENV_KMS_ENABLED);
+      if(env == null){
+        return true;
+      }
+      else {
+        return Boolean.valueOf(env);
+      }
     }
+  }
 
-    private static class AuthorizationClientHolder {
-        static final AuthorizationClient instance = computeValue();
-        static AuthorizationClient computeValue() {
+  private static Boolean isKmsEnabled() {
+      return KmsEnabledHolder.kmsEnabled;
+  }
 
+  public static void persistTokens(String userid_in_fence, String userid_in_ego, String access_token, String refresh_token) {
 
-            val ac =  new AuthorizationClient();
-            ac.setClientId(System.getenv(ENV_FENCE_CLIENT_ID));
-            ac.setClientSecret(System.getenv(ENV_FENCE_CLIENT_SECRET));
-            ac.setRedirectUri(System.getenv(ENV_FENCE_REDIRECT_URI));
-            ac.setScope(System.getenv(ENV_FENCE_SCOPE));
-            return ac;
-        }
-    }
+    getDynamoDB().batchWriteItem(
+        new TableWriteItems(getTokenTableName())
+            .withItemsToPut(
+                new Item()
+                    .withPrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego)
+                    .withString(FIELD_NAME_OF_USER_ID_IN_FENCE, userid_in_fence)
+                    .withString(FIELD_NAME_OF_ACCESS_TOKEN, encrypt(access_token))
+                    .withString(FIELD_NAME_OF_REFRESH_TOKEN, encrypt(refresh_token))
+            )
+    );
+  }
 
-    private static class TokenTableNameHolder{
-        static final String tableName = computeValue();
-        static String computeValue() {
-            return Optional.ofNullable(System.getenv(ENV_TOKEN_TABLE_NAME)).orElse(DEFAULT_TOKEN_TABLE_NAME);
-        }
-    }
+  public static void updateTokens(String userid_in_ego, String access_token, String refresh_token) {
 
-    private static String getTokenTableName() {
-        return TokenTableNameHolder.tableName;
-    }
+    getDynamoDB().getTable(getTokenTableName()).updateItem(
+        new UpdateItemSpec()
+            .withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego))
+            .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_ACCESS_TOKEN).put(encrypt(access_token)))
+  );
 
-    private static class KmsEnabledHolder {
-        static final Boolean kmsEnabled = computeValue();
-        static Boolean computeValue() {
-            String env = System.getenv(ENV_KMS_ENABLED);
-            if(env == null){
-                return true;
-            }
-            else{
-                return Boolean.valueOf(env);
-            }
-        }
-    }
+    getDynamoDB().getTable(getTokenTableName()).updateItem(
+        new UpdateItemSpec()
+            .withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego))
+            .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_REFRESH_TOKEN).put(encrypt(refresh_token)))
+    );
+  }
 
-    private static Boolean isKmsEnabled() {
-        return KmsEnabledHolder.kmsEnabled;
-    }
+  public static KfTokens retrieveTokens(String userid_in_ego) {
+    val outcome =
+      getDynamoDB().batchGetItem(
+          new TableKeysAndAttributes(getTokenTableName()).withPrimaryKeys(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego)).withAttributeNames(FIELD_NAME_OF_USER_ID_IN_FENCE, FIELD_NAME_OF_ACCESS_TOKEN, FIELD_NAME_OF_REFRESH_TOKEN)
+      );
 
-    public static void persistTokens(String userid_in_fence, String userid_in_ego, String access_token, String refresh_token) {
-
-        getDynamoDB().batchWriteItem(
-                new TableWriteItems(getTokenTableName())
-                        .withItemsToPut(
-                                new Item()
-                                        .withPrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego)
-                                        .withString(FIELD_NAME_OF_USER_ID_IN_FENCE, userid_in_fence)
-                                        .withString(FIELD_NAME_OF_ACCESS_TOKEN, encrypt(access_token))
-                                        .withString(FIELD_NAME_OF_REFRESH_TOKEN, encrypt(refresh_token))
-                        )
+    val tokens = new KfTokens();
+    tokens.setUserid_in_ego(userid_in_ego);
+    return
+        outcome.getTableItems().get(getTokenTableName()).stream().reduce(
+            tokens,
+            (t, item) -> {
+                t.setUserid_in_fence(Optional.of(item.getString(FIELD_NAME_OF_USER_ID_IN_FENCE)).orElse(null));
+                t.setAccess_token(decrypt( Optional.of(item.getString(FIELD_NAME_OF_ACCESS_TOKEN)).orElse(null)));
+                t.setRefresh_token(decrypt( Optional.of(item.getString(FIELD_NAME_OF_REFRESH_TOKEN)).orElse(null)));
+                return t;
+            },
+            (l, r) -> null
         );
-    }
+  }
 
-    public static void updateTokens(String userid_in_ego, String access_token, String refresh_token) {
+  public static String removeTokens(String userid_in_ego) {
 
-        getDynamoDB().getTable(getTokenTableName()).updateItem(
-                new UpdateItemSpec()
-                        .withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego))
-                        .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_ACCESS_TOKEN).put(encrypt(access_token)))
-        );
+    val table = getDynamoDB().getTable(getTokenTableName());
+    val deleteItemSpec = new DeleteItemSpec().withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego));
+    val outcome = getDynamoDB().getTable(getTokenTableName()).deleteItem(deleteItemSpec);
+    return outcome.getDeleteItemResult().toString();
+  }
 
-        getDynamoDB().getTable(getTokenTableName()).updateItem(
-                new UpdateItemSpec()
-                        .withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego))
-                        .withAttributeUpdate(new AttributeUpdate(FIELD_NAME_OF_REFRESH_TOKEN).put(encrypt(refresh_token)))
-        );
-    }
+  private static String encrypt(String token) {
+    if(isKmsEnabled())
+      return KMSUtils.encrypt(token);
+    else
+      return token;
+  }
 
-    public static KfTokens retrieveTokens(String userid_in_ego) {
-        val outcome =
-                getDynamoDB().batchGetItem(
-                        new TableKeysAndAttributes(getTokenTableName()).withPrimaryKeys(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego)).withAttributeNames(FIELD_NAME_OF_USER_ID_IN_FENCE, FIELD_NAME_OF_ACCESS_TOKEN, FIELD_NAME_OF_REFRESH_TOKEN)
-                );
-
-        val tokens = new KfTokens();
-        tokens.setUserid_in_ego(userid_in_ego);
-        return
-            outcome.getTableItems().get(getTokenTableName()).stream().reduce(
-                    tokens,
-                    (t, item) -> {
-                        t.setUserid_in_fence(Optional.of(item.getString(FIELD_NAME_OF_USER_ID_IN_FENCE)).orElse(null));
-                        t.setAccess_token(decrypt( Optional.of(item.getString(FIELD_NAME_OF_ACCESS_TOKEN)).orElse(null)));
-                        t.setRefresh_token(decrypt( Optional.of(item.getString(FIELD_NAME_OF_REFRESH_TOKEN)).orElse(null)));
-                        return t;
-                    },
-                    (l, r) -> null
-            );
-    }
-
-    public static String removeTokens(String userid_in_ego) {
-
-        val table = getDynamoDB().getTable(getTokenTableName());
-        val deleteItemSpec = new DeleteItemSpec().withPrimaryKey(new PrimaryKey(FIELD_NAME_OF_USER_ID_IN_EGO, userid_in_ego));
-        val outcome = getDynamoDB().getTable(getTokenTableName()).deleteItem(deleteItemSpec);
-        return outcome.getDeleteItemResult().toString();
-    }
-
-    private static String encrypt(String token) {
-        if(isKmsEnabled())
-            return KMSUtils.encrypt(token);
-        else
-            return token;
-    }
-
-    private static String decrypt(String cipher) {
-        if (isKmsEnabled())
-            return KMSUtils.decrypt(cipher);
-        else
-            return cipher;
-    }
+  private static String decrypt(String cipher) {
+    if (isKmsEnabled())
+      return KMSUtils.decrypt(cipher);
+    else
+      return cipher;
+  }
 
 }
