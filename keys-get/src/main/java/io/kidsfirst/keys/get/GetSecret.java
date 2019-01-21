@@ -21,6 +21,7 @@ import io.kidsfirst.keys.core.dao.SecretDao;
 import io.kidsfirst.keys.core.model.LambdaRequest;
 import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.model.Secret;
+import io.kidsfirst.keys.core.utils.KMSUtils;
 import lombok.var;
 
 import java.net.HttpURLConnection;
@@ -43,9 +44,8 @@ public class GetSecret extends LambdaRequestHandler {
 
     if (!allSecrets.isEmpty()) {
     Secret secret = allSecrets.get(0);
-      // TODO: decrypt secretValue
       String secretValue = secret.getSecret();
-      resp.setBody(secretValue);
+      resp.setBody(KMSUtils.decrypt(secretValue));
       resp.setStatusCode(HttpURLConnection.HTTP_OK);
 
     } else {
