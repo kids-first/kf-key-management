@@ -28,7 +28,8 @@ public class FenceUtils {
   public static String getAccessToken(final Provider fence, final String userId) {
     List<Secret> secrets = SecretDao.getSecret(fence.accessTokenKey(), userId);
     if (!secrets.isEmpty()) {
-      return secrets.get(0).getSecret();
+      String token = secrets.get(0).getSecret();
+      return KMSUtils.decrypt(token);
 
     }
 
@@ -38,7 +39,8 @@ public class FenceUtils {
   public static String getRefreshToken(final Provider fence, final String userId) {
     List<Secret> secrets = SecretDao.getSecret(fence.refreshTokenKey(), userId);
     if (!secrets.isEmpty()) {
-      return secrets.get(0).getSecret();
+      String token = secrets.get(0).getSecret();
+      return KMSUtils.decrypt(token);
 
     }
 
