@@ -45,7 +45,9 @@ public class GetSecret extends LambdaRequestHandler {
     if (!allSecrets.isEmpty()) {
     Secret secret = allSecrets.get(0);
       String secretValue = secret.getSecret();
-      resp.setBody(KMSUtils.decrypt(secretValue));
+      String decryptedSecret = KMSUtils.decrypt(secretValue);
+
+      resp.setBody(decryptedSecret);
       resp.setStatusCode(HttpURLConnection.HTTP_OK);
 
     } else {
