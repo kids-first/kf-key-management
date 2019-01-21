@@ -10,7 +10,7 @@ import lombok.Data;
 public class LambdaRequest {
 
   // === Lambda Will Populate Object ===
-  private String body;
+  private Map<String, String> body;
   private Map<String, String> headers;
   private Map<String, String> queryStringParameters;
 
@@ -19,7 +19,7 @@ public class LambdaRequest {
    * getUserId will use the Ego JWT in the Authorization header to authorize the request (using Ego Public Key) and
    *  if authorized will return the user ID.
    * @return User ID found in the Ego JWT
-   * @throws IllegalAccessException Indicates request is unauthorized
+   * @throws IllegalAccessException Indicates request is unauthorized, or is authorized but missing a userID
    */
   public String getUserId() throws IllegalAccessException {
     try {
@@ -29,7 +29,13 @@ public class LambdaRequest {
       String token = auth.replace("Bearer ", "");
       Jwt authToken = JWTUtils.parseToken(token, "ego");
 
-      return JWTUtils.getUserId(authToken);
+      String userId = JWTUtils.getUserId(authToken);
+
+      if (userId == null) {
+        throw new IllegalAccessException("Authorization token is missing user ID.");
+      }
+
+      return userId;
 
     } catch (Exception e) {
       throw new IllegalAccessException(e.getMessage());

@@ -18,48 +18,47 @@ package io.kidsfirst.keys.delete;
 
 import io.kidsfirst.keys.core.LambdaRequestHandler;
 import io.kidsfirst.keys.core.dao.SecretDao;
+import io.kidsfirst.keys.core.model.LambdaRequest;
+import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.model.Secret;
 import io.kidsfirst.keys.core.utils.KMSUtils;
+import lombok.var;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.net.HttpURLConnection;
 
-public class DeleteSecret extends LambdaRequestHandler{
+
+public class DeleteSecret extends LambdaRequestHandler {
 
   /**
    * Remove secret for a given service and user
    */
   @Override
-  public String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException {
+  public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException {
 
+    String userId = request.getUserId();
 
-    if (userId == null) {
-      throw new IllegalArgumentException("User ID not found.");
-    }
+    var resp = new LambdaResponse();
+    resp.addDefaultHeaders();
 
-    try {
-
-      // === 1. Get service from event
-      JSONParser parser = new JSONParser();
-      JSONObject body = (JSONObject) parser.parse((String) event.get("body"));
-
-      String service = (String) body.get("service");
-
-      if (service == null) {
-        throw new IllegalArgumentException("Required Field [service] missing in request body.");
-      }
-
-      // === 2. Call Delete
-      SecretDao.deleteSecret(service, userId);
-
-    } catch (ClassCastException e) {
-      throw new IllegalArgumentException("Exception thrown accessing request data: " + e.getMessage());
+    var body = request.getBody();
+    if(body == null) {
+      throw new IllegalAccessException("No request body provided.");
 
     }
 
+    String service = request.getBody().get("service");
+    if(service.isEmpty()) {
+      throw new IllegalArgumentException("Required Parameter 'service' missing from body.");
+    }
 
-    return "";
+    SecretDao.deleteSecret(service, userId);
+
+    resp.setStatusCode(HttpURLConnection.HTTP_OK);
+
+    return resp;
   }
 
 }

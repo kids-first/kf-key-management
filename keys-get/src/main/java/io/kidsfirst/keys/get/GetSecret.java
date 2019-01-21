@@ -35,7 +35,7 @@ public class GetSecret extends LambdaRequestHandler {
 
     String service = request.getQueryStringParameters().getOrDefault("service", null);
     if (service.isEmpty()) {
-      throw new IllegalArgumentException("Required Query Parameter [service] missing");
+      throw new IllegalArgumentException("Required Parameter 'service' missing from URL Query.");
     }
 
     var resp = new LambdaResponse();
