@@ -43,16 +43,7 @@ public class DeleteSecret extends LambdaRequestHandler {
     var resp = new LambdaResponse();
     resp.addDefaultHeaders();
 
-    var body = request.getBody();
-    if(body == null) {
-      throw new IllegalAccessException("No request body provided.");
-
-    }
-
-    String service = request.getBody().get("service");
-    if(service.isEmpty()) {
-      throw new IllegalArgumentException("Required Parameter 'service' missing from body.");
-    }
+    String service = request.getBodyValue("service");
 
     SecretDao.deleteSecret(service, userId);
 
