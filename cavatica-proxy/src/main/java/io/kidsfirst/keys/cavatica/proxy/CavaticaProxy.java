@@ -18,6 +18,8 @@ package io.kidsfirst.keys.cavatica.proxy;
 
 import io.kidsfirst.keys.core.LambdaRequestHandler;
 import io.kidsfirst.keys.core.dao.SecretDao;
+import io.kidsfirst.keys.core.model.LambdaRequest;
+import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.model.Secret;
 import io.kidsfirst.keys.core.utils.KMSUtils;
 import org.apache.http.HttpHeaders;
@@ -45,38 +47,37 @@ public class CavaticaProxy extends LambdaRequestHandler {
   private static String[] HTTP_ALLOWED_METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE"};
 
   @Override
-  public String processEvent(JSONObject event, String userId)
-    throws IllegalArgumentException, IOException, ParseException {
+  public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException, IOException {
 
-    if (userId == null) {
-      throw new IllegalArgumentException("User ID not found.");
-    }
+    String userId = request.getUserId();
+
+    LambdaResponse resp = new LambdaResponse();
+    resp.addDefaultHeaders();
+
     String cavaticaKey = getCavaticaKey(userId);
 
-    try {
+    // Path
+    String path = request.getBodyValue("path");
 
-      JSONParser parser = new JSONParser();
-      JSONObject eventBody = (JSONObject) parser.parse((String) event.get("body"));
-
-      // Path
-      String path = (String) eventBody.get("path");
-
-      // Method - confirm it is in HTTP_ALLOWED_METHODS or throw error
-      String method = ((String) eventBody.get("method")).toUpperCase();
-      if ( Arrays.stream(HTTP_ALLOWED_METHODS).noneMatch(allowed -> allowed.equals(method)) ) {
-        // Invalid method provided
-        throw new IllegalArgumentException("Provided method '"+method+"'is not allowed.");
-      }
-
-      // Body - default to null
-      JSONObject bodyJson = ((JSONObject) eventBody.get("body"));
-      String body = bodyJson == null ? null : bodyJson.toJSONString();
-
-      return sendCavaticaRequest(cavaticaKey, path, method, body);
-
-    } catch (ClassCastException e) {
-      throw new IllegalArgumentException("Exception thrown accessing request data: " + e.getMessage());
+    // Method - confirm it is in HTTP_ALLOWED_METHODS or throw error
+    String method = request.getBodyValue("method").toUpperCase();
+    if ( Arrays.stream(HTTP_ALLOWED_METHODS).noneMatch(allowed -> allowed.equals(method)) ) {
+      // Invalid method provided
+      throw new IllegalArgumentException(String.format("Provided method '%s' is not allowed.", method));
     }
+
+    // Body - default to null
+    String body = request.getBodyValue("body");
+    if (body.isEmpty()) {
+      body = null;
+    }
+
+    String cavaticaResponse = sendCavaticaRequest(cavaticaKey, path, method, body);
+
+    resp.setBody(cavaticaResponse);
+    resp.setStatusCode(HttpURLConnection.HTTP_OK);
+
+    return resp;
 
   }
 
@@ -86,10 +87,11 @@ public class CavaticaProxy extends LambdaRequestHandler {
     if (!allSecrets.isEmpty()) {
       Secret secret = allSecrets.get(0);
       String secretValue = secret.getSecret();
+
       return KMSUtils.decrypt(secretValue);
 
     } else {
-      throw new IllegalArgumentException("No cavatica secret found, unable to send request.");
+      throw new IllegalArgumentException("No Cavatica token available; unable to send request.");
     }
   }
 
