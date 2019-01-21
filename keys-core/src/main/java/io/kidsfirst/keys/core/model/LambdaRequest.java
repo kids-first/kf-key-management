@@ -43,4 +43,50 @@ public class LambdaRequest {
     }
   }
 
+
+  public String getBodyValue(String key) throws IllegalArgumentException {
+
+    if (body == null) {
+      throw new IllegalArgumentException(String.format("No Body Data Found. Expected Parameter '%s'.", key));
+
+    }
+
+    String output = body.get(key);
+    if (output.isEmpty()) {
+      throw new IllegalArgumentException(String.format("No Parameter found for '%s' in body.", key));
+
+    }
+
+    return output;
+  }
+
+  public String getHeaderValue(String key) throws IllegalArgumentException {
+
+    if (headers == null) {
+      throw new IllegalArgumentException(String.format("No Headers Found. Expected '%s'.", key));
+
+    }
+
+    String output = headers.get(key);
+    if (output.isEmpty()) {
+      throw new IllegalArgumentException(String.format("No Header value found for '%s'.", key));
+    }
+
+    return output;
+  }
+
+  public String getQueryStringValue(String key) throws IllegalArgumentException {
+
+    if (queryStringParameters == null) {
+      throw new IllegalArgumentException(String.format("No URL query parameters Found. Expected '%s'.", key));
+
+    }
+
+    String output = queryStringParameters.get(key);
+    if (output.isEmpty()) {
+      throw new IllegalArgumentException(String.format("No Parameter value found for '%s' in URL query.", key));
+    }
+
+    return output;
+  }
 }
