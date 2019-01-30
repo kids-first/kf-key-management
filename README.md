@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/key_management.svg" alt="Kids First Key Management" width="660px">
+</p>
+
 # Kids First Key Management Lambdas
 
 AWS Lambda functions for storing user api tokens from third party services.
