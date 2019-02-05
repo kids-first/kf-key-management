@@ -3,9 +3,8 @@ package io.kidsfirst.keys.core.utils;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClient;
 import com.amazonaws.services.kms.model.DecryptRequest;
-import com.amazonaws.services.kms.model.DecryptResult;
 import com.amazonaws.services.kms.model.EncryptRequest;
-import com.amazonaws.services.kms.model.EncryptResult;
+import lombok.val;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -19,13 +18,13 @@ public class KMSUtils {
   public static String encrypt(String original) {
 
     try {
-      ByteBuffer bufferedOriginal = StringToByteBuffer(original);
-      EncryptRequest encryptRequest = new EncryptRequest();
+      val bufferedOriginal = StringToByteBuffer(original);
+      val encryptRequest = new EncryptRequest();
       encryptRequest.withKeyId(keyId);
       encryptRequest.setPlaintext(bufferedOriginal);
 
-      EncryptResult result = kms.encrypt(encryptRequest);
-      ByteBuffer bufferedCipher = result.getCiphertextBlob();
+      val result = kms.encrypt(encryptRequest);
+      val bufferedCipher = result.getCiphertextBlob();
       return ByteBufferToString(bufferedCipher);
 
     } catch (UnsupportedEncodingException e){
@@ -39,12 +38,12 @@ public class KMSUtils {
   public static String decrypt(String cipher) {
 
     try {
-      ByteBuffer bufferedCipher = StringToByteBuffer(cipher);
-      DecryptRequest decryptRequest = new DecryptRequest();
+      val bufferedCipher = StringToByteBuffer(cipher);
+      val decryptRequest = new DecryptRequest();
       decryptRequest.setCiphertextBlob(bufferedCipher);
 
-      DecryptResult result = kms.decrypt(decryptRequest);
-      ByteBuffer bufferedOriginal = result.getPlaintext();
+      val result = kms.decrypt(decryptRequest);
+      val bufferedOriginal = result.getPlaintext();
       return ByteBufferToString(bufferedOriginal);
 
     } catch (UnsupportedEncodingException e){
@@ -56,7 +55,7 @@ public class KMSUtils {
   }
 
   private static ByteBuffer StringToByteBuffer(String string) throws UnsupportedEncodingException {
-    byte[] bytes = string.getBytes(StandardCharsets.ISO_8859_1);
+    val bytes = string.getBytes(StandardCharsets.ISO_8859_1);
     return ByteBuffer.wrap(bytes);
   }
 

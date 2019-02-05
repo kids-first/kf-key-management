@@ -1,10 +1,10 @@
 package io.kidsfirst.keys.core.model;
 
-import java.util.Map;
-
-import io.jsonwebtoken.Jwt;
 import io.kidsfirst.keys.core.utils.JWTUtils;
 import lombok.Data;
+import lombok.val;
+
+import java.util.Map;
 
 @Data
 public class LambdaRequest {
@@ -23,13 +23,13 @@ public class LambdaRequest {
    */
   public String getUserId() throws IllegalAccessException {
     try {
-      String auth = this.headers.getOrDefault("Authorization","");
+      val auth = this.headers.getOrDefault("Authorization","");
 
       // Process header, will throw error if authorization fails
-      String token = auth.replace("Bearer ", "");
-      Jwt authToken = JWTUtils.parseToken(token, "ego");
+      val token = auth.replace("Bearer ", "");
+      val authToken = JWTUtils.parseToken(token, "ego");
 
-      String userId = JWTUtils.getUserId(authToken);
+      val userId = JWTUtils.getUserId(authToken);
 
       if (userId == null) {
         throw new IllegalAccessException("Authorization token is missing user ID.");
@@ -51,7 +51,7 @@ public class LambdaRequest {
 
     }
 
-    String output = body.get(key);
+    val output = body.get(key);
     if (output.isEmpty()) {
       throw new IllegalArgumentException(String.format("No Parameter found for '%s' in body.", key));
 
@@ -67,7 +67,7 @@ public class LambdaRequest {
 
     }
 
-    String output = headers.get(key);
+    val output = headers.get(key);
     if (output.isEmpty()) {
       throw new IllegalArgumentException(String.format("No Header value found for '%s'.", key));
     }
@@ -82,7 +82,7 @@ public class LambdaRequest {
 
     }
 
-    String output = queryStringParameters.get(key);
+    val output = queryStringParameters.get(key);
     if (output.isEmpty()) {
       throw new IllegalArgumentException(String.format("No Parameter value found for '%s' in URL query.", key));
     }

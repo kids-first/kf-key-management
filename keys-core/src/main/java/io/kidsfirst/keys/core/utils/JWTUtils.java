@@ -1,6 +1,7 @@
 package io.kidsfirst.keys.core.utils;
 
 import io.jsonwebtoken.*;
+import lombok.val;
 import org.apache.commons.codec.binary.Base64;
 
 import java.security.KeyFactory;
@@ -16,8 +17,8 @@ public class JWTUtils {
     // Property 'sub' contains userId:
     //   body.sub
 
-    Map body     = (Map)    token.getBody();
-    String id    = (String) body.get("sub");
+    val body  = (Map)    token.getBody();
+    val id    = (String) body.get("sub");
 
     return id;
   }
@@ -36,10 +37,10 @@ public class JWTUtils {
         return null;
     }
 
-    byte[] publicBytes = Base64.decodeBase64(publicKeyString);
-    X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+    val publicBytes = Base64.decodeBase64(publicKeyString);
+    val keySpec = new X509EncodedKeySpec(publicBytes);
     try {
-      KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+      val keyFactory = KeyFactory.getInstance("RSA");
       return keyFactory.generatePublic(keySpec);
 
     } catch (NoSuchAlgorithmException e) {
@@ -55,9 +56,9 @@ public class JWTUtils {
   public static Jwt parseToken(String token, String environment) throws
           SignatureException, ExpiredJwtException, MalformedJwtException, UnsupportedJwtException {
 
-    PublicKey key = getPublicKey(environment);
+    val key = getPublicKey(environment);
 
-    Jwt jwt = Jwts.parser()
+    val jwt = Jwts.parser()
             .setSigningKey(key)
             .parse(token);
 

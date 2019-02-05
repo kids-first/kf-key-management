@@ -4,6 +4,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import io.kidsfirst.keys.core.model.LambdaRequest;
 import io.kidsfirst.keys.core.model.LambdaResponse;
+import lombok.val;
+import lombok.var;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -16,7 +18,7 @@ public abstract class LambdaRequestHandler implements RequestHandler<LambdaReque
   public abstract LambdaResponse processEvent(final LambdaRequest request) throws Exception;
 
   public LambdaResponse handleRequest(final LambdaRequest input, final Context context) {
-    LambdaResponse resp = new LambdaResponse();
+    var resp = new LambdaResponse();
     resp.addDefaultHeaders();
 
     try {
@@ -47,13 +49,13 @@ public abstract class LambdaRequestHandler implements RequestHandler<LambdaReque
 
 
   private static JSONObject formatException(Exception e) {
-    JSONObject output = new JSONObject();
+    val output = new JSONObject();
     output.put("error", e.getClass().getSimpleName());
     output.put("message", e.getMessage());
 
     // Add Stack Trace if environment states debug
     if(System.getenv("debug") != null) {
-      StringBuffer sb = new StringBuffer();
+      val sb = new StringBuffer();
       for(StackTraceElement ste: e.getStackTrace()){
         sb.append(ste.getClassName() + "." + ste.getMethodName() + ": " + ste.getLineNumber() + "\n");
       }
