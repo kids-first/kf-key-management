@@ -32,11 +32,19 @@
             <artifactId>lombok</artifactId>
             <version>1.18.0</version>
         </dependency>
+
         <!-- Json Web Tokens -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
             <version>0.8.0</version>
+        </dependency>
+
+        <!-- OAuth2 for Fence -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>oauth2-oidc-sdk</artifactId>
+            <version>5.62</version>
         </dependency>
     </dependencies>
 
