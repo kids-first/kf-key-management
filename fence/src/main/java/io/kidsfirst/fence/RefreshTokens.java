@@ -45,7 +45,7 @@ public class RefreshTokens extends LambdaRequestHandler {
       val tokensResponse = refreshTokens(refresh, clientId, clientSecret, fenceEndpoint);
 
       if(tokensResponse.isPresent()) {
-        val tokens = tokensResponse.get();git
+        val tokens = tokensResponse.get();
         FenceUtils.persistAccessToken(fence, userId, tokens.getAccessToken().getValue());
         FenceUtils.persistRefreshToken(fence, userId, tokens.getAccessToken().getValue());
 
