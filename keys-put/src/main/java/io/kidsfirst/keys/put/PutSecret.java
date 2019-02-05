@@ -22,10 +22,13 @@ import io.kidsfirst.keys.core.model.LambdaRequest;
 import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.model.Secret;
 import io.kidsfirst.keys.core.utils.KMSUtils;
+import io.kidsfirst.keys.core.utils.SecretUtils;
 import lombok.var;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
+import java.net.HttpURLConnection;
 
 
 public class PutSecret extends LambdaRequestHandler{
@@ -36,28 +39,24 @@ public class PutSecret extends LambdaRequestHandler{
   @Override
   public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException {
 
-    var resp = new LambdaResponse();
-    resp.addDefaultHeaders();
-
     String userId = request.getUserId();
 
-    // === 1. Create a Secret to hold the data to save
-    Secret secret = new Secret();
-    secret.setUserId(userId);
 
-    // === 2. Get service and secretValue from event
+    // === 1. Get service and secretValue from event
     String service = request.getBodyValue("service");
     String secretValue = request.getBodyValue("secret");
 
-    // === 3. Encrypt the secret value
-    String encryptedSecret = KMSUtils.encrypt(secretValue);
-
-    secret.setService(service);
-    secret.setSecret(encryptedSecret);
+    // === 2. Create a Secret to hold the data
+    Secret secret = new Secret(userId, service, secretValue);
 
 
-    // === 4. Save to dynamo DB
-    SecretDao.saveOrUpdateSecret(secret);
+    // === 3. Save to dynamo DB
+    SecretUtils.encryptAndSave(secret);
+
+
+    var resp = new LambdaResponse();
+    resp.addDefaultHeaders();
+    resp.setStatusCode(HttpURLConnection.HTTP_OK);
     return resp;
   }
 

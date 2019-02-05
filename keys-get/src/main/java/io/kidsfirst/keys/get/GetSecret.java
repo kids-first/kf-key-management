@@ -17,37 +17,31 @@
 package io.kidsfirst.keys.get;
 
 import io.kidsfirst.keys.core.LambdaRequestHandler;
-import io.kidsfirst.keys.core.dao.SecretDao;
 import io.kidsfirst.keys.core.model.LambdaRequest;
 import io.kidsfirst.keys.core.model.LambdaResponse;
-import io.kidsfirst.keys.core.model.Secret;
-import io.kidsfirst.keys.core.utils.KMSUtils;
-import lombok.var;
+import io.kidsfirst.keys.core.utils.SecretUtils;
+import lombok.val;
 
 import java.net.HttpURLConnection;
-import java.util.List;
 
 public class GetSecret extends LambdaRequestHandler {
 
   @Override
   public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException {
 
-    String userId = request.getUserId();
+    val userId = request.getUserId();
 
-    String service = request.getQueryStringValue("service");
+    val service = request.getQueryStringValue("service");
 
-    var resp = new LambdaResponse();
+    val secretValue = SecretUtils.fetchAndDecrypt(userId, service);
+
+
+    val resp = new LambdaResponse();
     resp.addDefaultHeaders();
     resp.addContentTypeHeader("text/plain");
 
-    List<Secret> allSecrets = SecretDao.getSecret(service, userId);
-
-    if (!allSecrets.isEmpty()) {
-    Secret secret = allSecrets.get(0);
-      String secretValue = secret.getSecret();
-      String decryptedSecret = KMSUtils.decrypt(secretValue);
-
-      resp.setBody(decryptedSecret);
+    if (secretValue.isPresent()) {
+      resp.setBody(secretValue.get());
       resp.setStatusCode(HttpURLConnection.HTTP_OK);
 
     } else {

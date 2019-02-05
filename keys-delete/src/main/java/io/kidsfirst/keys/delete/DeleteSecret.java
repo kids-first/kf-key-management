@@ -20,12 +20,7 @@ import io.kidsfirst.keys.core.LambdaRequestHandler;
 import io.kidsfirst.keys.core.dao.SecretDao;
 import io.kidsfirst.keys.core.model.LambdaRequest;
 import io.kidsfirst.keys.core.model.LambdaResponse;
-import io.kidsfirst.keys.core.model.Secret;
-import io.kidsfirst.keys.core.utils.KMSUtils;
 import lombok.var;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.net.HttpURLConnection;
 
