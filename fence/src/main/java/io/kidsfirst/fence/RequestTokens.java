@@ -1,91 +1,97 @@
 package io.kidsfirst.fence;
 
-import com.nimbusds.oauth2.sdk.AuthorizationCode;
-import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
-import com.nimbusds.oauth2.sdk.Scope;
-import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.kidsfirst.keys.core.LambdaRequestHandler;
-import io.kidsfirst.keys.core.utils.JWTUtils;
+import io.kidsfirst.keys.core.model.LambdaRequest;
+import io.kidsfirst.keys.core.model.LambdaResponse;
+import io.kidsfirst.keys.core.utils.FenceUtils;
 import lombok.val;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import static io.kidsfirst.fence.Constants.ENV_FENCE_TOKEN_ENDPOINT;
+import java.util.Optional;
 
 public class RequestTokens extends LambdaRequestHandler {
-    @Override
-    public String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException, NullPointerException {
 
-        JSONParser parser = new JSONParser();
+  @Override
+  public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException, ParseException, IOException, URISyntaxException {
 
-        Object strQueryPara = event.get("queryStringParameters");
+    val userId = request.getUserId();
 
-        JSONObject queryParas = (JSONObject) parser.parse(strQueryPara.toString());
+    val fenceKey = request.getQueryStringValue("fence");
+    val fence = FenceUtils.getProvider(fenceKey);
+    val authCode = request.getQueryStringValue("code");
 
-        val auth_code = queryParas.get("code");
+    val tokenResponse = requestTokens(authCode, fence);
 
-        val tokens = requestTokens(
-                auth_code.toString(),
-                Utils.getAuthClient().clientId,
-                Utils.getAuthClient().clientSecret,
-                System.getenv(ENV_FENCE_TOKEN_ENDPOINT),
-                Utils.getAuthClient().redirectUri,
-                Utils.getAuthClient().scope
-        );
+    if(tokenResponse.isPresent()) {
 
-        Utils.persistTokens(
-            JWTUtils.getUserId(JWTUtils.parseToken(tokens.getIDTokenString(), "fence")),
-            userId,
-            tokens.getAccessToken().getValue(),
-            tokens.getRefreshToken().getValue()
-        );
+      val tokens = tokenResponse.get();
+      FenceUtils.persistTokens(fence, userId, tokens);
 
-        return String.format("{\"access_token\":\"%s\", \"refresh_token\":\"%s\", \"id_token\":\"%s\"}", tokens.getAccessToken().getValue(), tokens.getRefreshToken().getValue(), tokens.getIDTokenString());
-    }
+      val body = new JSONObject();
+      body.put("access_token", tokens.getAccessToken().getValue());
+      body.put("refresh_token", tokens.getRefreshToken().getValue());
+      body.put("id_token", tokens.getIDTokenString());
 
+      val resp = new LambdaResponse();
+      resp.addDefaultHeaders();
+      resp.setBody(body.toJSONString());
+      resp.setStatusCode(HttpURLConnection.HTTP_OK);
+      return resp;
 
-    public OIDCTokens requestTokens(String auth_code, String client_id, String client_secret, String token_endpoint, String redirect_uri, String scope)  {
-
-        try{
-            val request = new TokenRequest(
-                    new URI(token_endpoint),
-
-                    new ClientSecretBasic(
-                            new ClientID(client_id),
-                            new Secret(client_secret)
-                    ),
-
-                    new AuthorizationCodeGrant(
-                            new AuthorizationCode(auth_code),
-                            new URI(redirect_uri)
-                    ),
-
-                    new Scope(scope)
-            );
-            val resp = request.toHTTPRequest().send();
-
-            if(resp.indicatesSuccess())
-                return OIDCTokenResponse.parse(resp).toSuccessResponse().getOIDCTokens();
-
-        }
-        catch (URISyntaxException e) {
-            e.printStackTrace();
-        }  catch (com.nimbusds.oauth2.sdk.ParseException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+    } else {
+      val resp = new LambdaResponse();
+      resp.addDefaultHeaders();
+      val body = new JSONObject();
+      body.put("error","No response from fence.");
+      resp.setStatusCode(HttpURLConnection.HTTP_INTERNAL_ERROR);
+      return resp;
 
     }
+  }
+
+
+  public Optional<OIDCTokens> requestTokens(String authCode, FenceUtils.Provider fence) throws ParseException, URISyntaxException, IOException {
+
+    val authClient = FenceUtils.getAuthClient(fence);
+    val fenceRequest = new TokenRequest(
+      new URI(fence.getEndpoint()),
+
+      new ClientSecretBasic(
+          new ClientID(authClient.getClientSecret()),
+          new Secret(authClient.getClientSecret())
+      ),
+
+      new AuthorizationCodeGrant(
+          new AuthorizationCode(authCode),
+          new URI(authClient.getRedirectUri())
+      ),
+
+      new Scope(authClient.getScope())
+    );
+    val fenceResponse = fenceRequest.toHTTPRequest().send();
+
+    if(fenceResponse.indicatesSuccess()) {
+      val tokens = OIDCTokenResponse
+          .parse(fenceResponse)
+          .toSuccessResponse()
+          .getOIDCTokens();
+
+      return Optional.of(tokens);
+
+    } else {
+      return Optional.empty();
+
+    }
+
+  }
 }
