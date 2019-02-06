@@ -21,21 +21,20 @@ import io.kidsfirst.keys.core.model.LambdaRequest;
 import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.model.Secret;
 import io.kidsfirst.keys.core.utils.SecretUtils;
+import java.net.HttpURLConnection;
 import lombok.var;
 
-import java.net.HttpURLConnection;
-
-
-public class PutSecret extends LambdaRequestHandler{
+public class PutSecret extends LambdaRequestHandler {
 
   /**
-   * Create secret object from userId and body of the Lambda event, encrypt the secretValue, and save to DynamoDB
+   * Create secret object from userId and body of the Lambda event, encrypt the secretValue, and
+   * save to DynamoDB
    */
   @Override
-  public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException {
+  public LambdaResponse processEvent(final LambdaRequest request)
+      throws IllegalAccessException, IllegalArgumentException {
 
     String userId = request.getUserId();
-
 
     // === 1. Get service and secretValue from event
     String service = request.getBodyString("service");
@@ -44,15 +43,12 @@ public class PutSecret extends LambdaRequestHandler{
     // === 2. Create a Secret to hold the data
     Secret secret = new Secret(userId, service, secretValue);
 
-
     // === 3. Save to dynamo DB
     SecretUtils.encryptAndSave(secret);
-
 
     var resp = new LambdaResponse();
     resp.addDefaultHeaders();
     resp.setStatusCode(HttpURLConnection.HTTP_OK);
     return resp;
   }
-
 }
