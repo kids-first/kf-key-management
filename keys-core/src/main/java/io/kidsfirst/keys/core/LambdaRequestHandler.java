@@ -59,7 +59,8 @@ public abstract class LambdaRequestHandler implements RequestHandler<LambdaReque
     output.put("message", e.getMessage());
 
     // Add Stack Trace if environment states debug
-    if(System.getenv("debug") != null) {
+    val debug = System.getenv("debug");
+    if( debug != null && debug.equalsIgnoreCase("true")) {
       val sb = new StringBuffer();
       for(StackTraceElement ste: e.getStackTrace()){
         sb.append(ste.getClassName() + "." + ste.getMethodName() + ": " + ste.getLineNumber() + "\n");
