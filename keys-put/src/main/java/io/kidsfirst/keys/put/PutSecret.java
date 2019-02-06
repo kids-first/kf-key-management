@@ -17,16 +17,11 @@
 package io.kidsfirst.keys.put;
 
 import io.kidsfirst.keys.core.LambdaRequestHandler;
-import io.kidsfirst.keys.core.dao.SecretDao;
 import io.kidsfirst.keys.core.model.LambdaRequest;
 import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.model.Secret;
-import io.kidsfirst.keys.core.utils.KMSUtils;
 import io.kidsfirst.keys.core.utils.SecretUtils;
 import lombok.var;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.net.HttpURLConnection;
 
@@ -43,8 +38,8 @@ public class PutSecret extends LambdaRequestHandler{
 
 
     // === 1. Get service and secretValue from event
-    String service = request.getBodyValue("service");
-    String secretValue = request.getBodyValue("secret");
+    String service = request.getBodyString("service");
+    String secretValue = request.getBodyString("secret");
 
     // === 2. Create a Secret to hold the data
     Secret secret = new Secret(userId, service, secretValue);

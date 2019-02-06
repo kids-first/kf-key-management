@@ -37,6 +37,11 @@ public abstract class LambdaRequestHandler implements RequestHandler<LambdaReque
       resp.setStatusCode(HttpURLConnection.HTTP_BAD_REQUEST);
       resp.setBody(formatException(e).toJSONString());
 
+    } catch (ClassCastException e) {
+      // Could not convert body parameter to expected type
+      resp.setStatusCode(HttpURLConnection.HTTP_BAD_REQUEST);
+      resp.setBody(formatException(e).toJSONString());
+
     } catch (Exception e) {
       resp.setStatusCode((HttpURLConnection.HTTP_INTERNAL_ERROR));
       resp.setBody(formatException(e).toJSONString());

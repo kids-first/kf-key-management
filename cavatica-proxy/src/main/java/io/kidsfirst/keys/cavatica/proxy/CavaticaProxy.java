@@ -24,9 +24,6 @@ import io.kidsfirst.keys.core.model.Secret;
 import io.kidsfirst.keys.core.utils.KMSUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -57,17 +54,17 @@ public class CavaticaProxy extends LambdaRequestHandler {
     String cavaticaKey = getCavaticaKey(userId);
 
     // Path
-    String path = request.getBodyValue("path");
+    String path = request.getBodyString("path");
 
     // Method - confirm it is in HTTP_ALLOWED_METHODS or throw error
-    String method = request.getBodyValue("method").toUpperCase();
+    String method = request.getBodyString("method").toUpperCase();
     if ( Arrays.stream(HTTP_ALLOWED_METHODS).noneMatch(allowed -> allowed.equals(method)) ) {
       // Invalid method provided
       throw new IllegalArgumentException(String.format("Provided method '%s' is not allowed.", method));
     }
 
     // Body - default to null
-    String body = request.getBodyValue("body");
+    String body = request.getBodyString("body");
     if (body.isEmpty()) {
       body = null;
     }

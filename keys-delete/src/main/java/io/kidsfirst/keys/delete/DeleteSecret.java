@@ -38,7 +38,7 @@ public class DeleteSecret extends LambdaRequestHandler {
     var resp = new LambdaResponse();
     resp.addDefaultHeaders();
 
-    String service = request.getBodyValue("service");
+    String service = request.getBodyString("service");
 
     SecretDao.deleteSecret(service, userId);
 

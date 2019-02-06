@@ -1,19 +1,26 @@
 package io.kidsfirst.keys.core.model;
 
 import io.kidsfirst.keys.core.utils.JWTUtils;
-import lombok.Data;
-import lombok.val;
+import lombok.*;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.util.Map;
 
-@Data
+@Data()
 public class LambdaRequest {
 
   // === Lambda Will Populate Object ===
-  private Map<String, String> body;
+  private String body;
   private Map<String, String> headers;
   private Map<String, String> queryStringParameters;
 
+  // When needed, the body string is parsed to a JSONObject
+  // Use custom getter methods (ex. getBodyValue) to access the values to ensure it is initialized before access
+  @Getter(AccessLevel.PRIVATE)
+  @Setter(AccessLevel.PRIVATE)
+  private JSONObject bodyData = null;
 
   /**
    * getUserId will use the Ego JWT in the Authorization header to authorize the request (using Ego Public Key) and
@@ -44,18 +51,35 @@ public class LambdaRequest {
   }
 
 
-  public String getBodyValue(String key) throws IllegalArgumentException {
+  public String getBodyString(String key) throws IllegalArgumentException, ClassCastException {
 
-    if (body == null) {
-      throw new IllegalArgumentException(String.format("No Body Data Found. Expected Parameter '%s'.", key));
+    val output = (String) getBodyValue(key);
 
+    return output;
+  }
+
+  public Object getBodyValue(String key) throws IllegalArgumentException {
+
+    //Initialize bodyData if it hasnt been
+    if(bodyData == null) {
+      if (body == null) {
+        throw new IllegalArgumentException(String.format("No Body Data Found. Expected Parameter '%s'.", key));
+      }
+
+      JSONParser parser = new JSONParser();
+
+      try {
+        bodyData = (JSONObject) parser.parse(body);
+      } catch (ParseException e) {
+        throw new IllegalArgumentException(String.format("Could not parse body as JSON."), e);
+      }
     }
 
-    val output = body.get(key);
-    if (output.isEmpty()) {
+    if (!bodyData.containsKey(key)) {
       throw new IllegalArgumentException(String.format("No Parameter found for '%s' in body.", key));
-
     }
+
+    val output = bodyData.get(key);
 
     return output;
   }
