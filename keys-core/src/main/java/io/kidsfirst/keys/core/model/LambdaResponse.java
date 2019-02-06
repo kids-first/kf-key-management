@@ -25,7 +25,6 @@ import java.util.Map;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class LambdaResponse {
 
   private int statusCode;
