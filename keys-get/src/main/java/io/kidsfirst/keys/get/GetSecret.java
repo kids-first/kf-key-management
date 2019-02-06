@@ -17,6 +17,7 @@
 package io.kidsfirst.keys.get;
 
 import io.kidsfirst.keys.core.LambdaRequestHandler;
+import io.kidsfirst.keys.core.exception.NotFoundException;
 import io.kidsfirst.keys.core.model.LambdaRequest;
 import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.utils.SecretUtils;
@@ -27,7 +28,9 @@ import java.net.HttpURLConnection;
 public class GetSecret extends LambdaRequestHandler {
 
   @Override
-  public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException {
+  public LambdaResponse processEvent(final LambdaRequest request)
+      throws IllegalAccessException, IllegalArgumentException, NotFoundException
+  {
 
     val userId = request.getUserId();
 
@@ -45,8 +48,7 @@ public class GetSecret extends LambdaRequestHandler {
       resp.setStatusCode(HttpURLConnection.HTTP_OK);
 
     } else {
-      resp.setBody("");
-      resp.setStatusCode(HttpURLConnection.HTTP_NO_CONTENT);
+      throw new NotFoundException(String.format("No value found for: %s", service));
 
     }
 
