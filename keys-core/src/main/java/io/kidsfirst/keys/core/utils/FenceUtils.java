@@ -17,28 +17,30 @@ public class FenceUtils {
   * */
 
   public enum Provider {
+    // List of supported Fence Providers
+    // - expected to match client provided query parameter (ignoreCase) unless you overwrite name()
     DCF,
     GEN3;
 
-    public String keyAccessToken() {
-      return String.format("fence_%s_access",this.name()).toLowerCase();
-    }
-    public String keyRefreshToken() {
-      return String.format("fence_%s_refresh",this.name()).toLowerCase();
-    }
-    public String keyUserId() {
-      return String.format("fence_%s_user",this.name()).toLowerCase();
-    }
+    public String keyAccessToken()  { return String.format("fence_%s_access",  this.name()).toLowerCase(); }
+    public String keyRefreshToken() { return String.format("fence_%s_refresh", this.name()).toLowerCase(); }
+    public String keyUserId()       { return String.format("fence_%s_user",    this.name()).toLowerCase(); }
 
-    public String getClientId() {     return System.getenv(String.format("%s_%s", Constants.ENV_FENCE_CLIENT_ID,     this.name().toLowerCase())); }
+    public String getClientId()     { return System.getenv(String.format("%s_%s", Constants.ENV_FENCE_CLIENT_ID,     this.name().toLowerCase())); }
     public String getClientSecret() { return System.getenv(String.format("%s_%s", Constants.ENV_FENCE_CLIENT_SECRET, this.name().toLowerCase())); }
-    public String getEndpoint() {     return System.getenv(String.format("%s_%s", Constants.ENV_FENCE_ENDPOINT,      this.name().toLowerCase())); }
-    public String getRedirectUri() {  return System.getenv(String.format("%s_%s", Constants.ENV_FENCE_REDIRECT_URI,  this.name().toLowerCase())); }
-    public String getScope() {        return System.getenv(String.format("%s_%s", Constants.ENV_FENCE_SCOPE,         this.name().toLowerCase())); }
+    public String getEndpoint()     { return System.getenv(String.format("%s_%s", Constants.ENV_FENCE_ENDPOINT,      this.name().toLowerCase())); }
+    public String getRedirectUri()  { return System.getenv(String.format("%s_%s", Constants.ENV_FENCE_REDIRECT_URI,  this.name().toLowerCase())); }
+    public String getScope()        { return System.getenv(String.format("%s_%s", Constants.ENV_FENCE_SCOPE,         this.name().toLowerCase())); }
   }
 
   public static Provider getProvider(final String key) throws IllegalArgumentException {
-    return Provider.valueOf(key.toUpperCase());
+    try {
+      return Provider.valueOf(key.toUpperCase());
+
+    } catch (IllegalArgumentException e) {
+      // Override default message for unknown enum constant
+      throw new IllegalArgumentException(String.format("Unknown fence identifier: %s", key), e);
+    }
 
   }
 
