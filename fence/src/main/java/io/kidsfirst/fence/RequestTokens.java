@@ -49,13 +49,7 @@ public class RequestTokens extends LambdaRequestHandler {
       return resp;
 
     } else {
-      val resp = new LambdaResponse();
-      resp.addDefaultHeaders();
-      val body = new JSONObject();
-      body.put("error","No response from fence.");
-      resp.setStatusCode(HttpURLConnection.HTTP_INTERNAL_ERROR);
-      return resp;
-
+      throw new IOException("No response from fence.");
     }
   }
 
