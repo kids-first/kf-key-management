@@ -22,13 +22,16 @@ import java.util.Optional;
 public class RequestTokens extends LambdaRequestHandler {
 
   @Override
-  public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException, ParseException, IOException, URISyntaxException {
+  public LambdaResponse processEvent(final LambdaRequest request)
+      throws IllegalAccessException, IllegalArgumentException, ParseException, IOException, URISyntaxException
+  {
 
     val userId = request.getUserId();
 
+
+    val authCode = request.getQueryStringValue("code");
     val fenceKey = request.getQueryStringValue("fence");
     val fence = FenceUtils.getProvider(fenceKey);
-    val authCode = request.getQueryStringValue("code");
 
     val tokenResponse = requestTokens(authCode, fence);
 
@@ -49,7 +52,7 @@ public class RequestTokens extends LambdaRequestHandler {
       return resp;
 
     } else {
-      throw new IOException("No response from fence.");
+      throw new IllegalAccessException("Fence did not return tokens for the provided code.");
     }
   }
 
@@ -61,7 +64,7 @@ public class RequestTokens extends LambdaRequestHandler {
       new URI(fence.getEndpoint()),
 
       new ClientSecretBasic(
-          new ClientID(authClient.getClientSecret()),
+          new ClientID(authClient.getClientId()),
           new Secret(authClient.getClientSecret())
       ),
 

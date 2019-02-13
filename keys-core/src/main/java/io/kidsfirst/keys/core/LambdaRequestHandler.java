@@ -8,14 +8,10 @@ import io.kidsfirst.keys.core.model.LambdaResponse;
 import lombok.val;
 import lombok.var;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.omg.CosNaming.NamingContextPackage.NotFound;
 
 import java.net.HttpURLConnection;
 
 public abstract class LambdaRequestHandler implements RequestHandler<LambdaRequest, LambdaResponse> {
-
-  private static JSONParser parser = new JSONParser();
 
   public abstract LambdaResponse processEvent(final LambdaRequest request) throws Exception;
 
