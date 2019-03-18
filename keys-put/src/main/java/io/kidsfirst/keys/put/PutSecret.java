@@ -17,61 +17,38 @@
 package io.kidsfirst.keys.put;
 
 import io.kidsfirst.keys.core.LambdaRequestHandler;
-import io.kidsfirst.keys.core.dao.SecretDao;
+import io.kidsfirst.keys.core.model.LambdaRequest;
+import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.model.Secret;
-import io.kidsfirst.keys.core.utils.KMSUtils;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import io.kidsfirst.keys.core.utils.SecretUtils;
+import java.net.HttpURLConnection;
+import lombok.var;
 
-
-public class PutSecret extends LambdaRequestHandler{
+public class PutSecret extends LambdaRequestHandler {
 
   /**
-   * Create secret object from userId and body of the Lambda event, encrypt the secretValue, and save to DynamoDB
+   * Create secret object from userId and body of the Lambda event, encrypt the secretValue, and
+   * save to DynamoDB
    */
   @Override
-  public String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException {
+  public LambdaResponse processEvent(final LambdaRequest request)
+      throws IllegalAccessException, IllegalArgumentException {
 
-    // === 1. Create a Secret to hold our data
-    Secret secret = new Secret();
+    String userId = request.getUserId();
 
-    if (userId == null) {
-      throw new IllegalArgumentException("User ID not found.");
-    }
-    secret.setUserId(userId);
+    // === 1. Get service and secretValue from event
+    String service = request.getBodyString("service");
+    String secretValue = request.getBodyString("secret");
 
-    try {
+    // === 2. Create a Secret to hold the data
+    Secret secret = new Secret(userId, service, secretValue);
 
-      // === 2. Get service and secretValue from event
-      JSONParser parser = new JSONParser();
-      JSONObject body = (JSONObject) parser.parse((String) event.get("body"));
+    // === 3. Save to dynamo DB
+    SecretUtils.encryptAndSave(secret);
 
-      String service = (String) body.get("service");
-      String secretValue = (String) body.get("secret");
-
-      if (service == null) {
-        throw new IllegalArgumentException("Required Field [service] missing in request body.");
-      }
-
-      if (secretValue == null) {
-        throw new IllegalArgumentException("Required Field [secret] missing in request body.");
-      }
-
-      // === 3. Encrypt the secret value
-      String encryptedSecret = KMSUtils.encrypt(secretValue);
-
-      secret.setService(service);
-      secret.setSecret(encryptedSecret);
-
-    } catch (ClassCastException e) {
-      throw new IllegalArgumentException("Exception thrown accessing request data: " + e.getMessage());
-
-    }
-
-    // === 4. Save to dynamo DB
-    SecretDao.saveOrUpdateSecret(secret);
-    return "";
+    var resp = new LambdaResponse();
+    resp.addDefaultHeaders();
+    resp.setStatusCode(HttpURLConnection.HTTP_OK);
+    return resp;
   }
-
 }

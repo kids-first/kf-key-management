@@ -1,5 +1,6 @@
 package io.kidsfirst.fence;
 
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
@@ -9,63 +10,89 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import io.kidsfirst.keys.core.LambdaRequestHandler;
+import io.kidsfirst.keys.core.model.LambdaRequest;
+import io.kidsfirst.keys.core.model.LambdaResponse;
+import io.kidsfirst.keys.core.utils.FenceUtils;
 import lombok.val;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import static io.kidsfirst.fence.Constants.ENV_FENCE_TOKEN_ENDPOINT;
-import static io.kidsfirst.fence.Utils.retrieveTokens;
-import static io.kidsfirst.fence.Utils.updateTokens;
+import java.util.Optional;
 
 public class RefreshTokens extends LambdaRequestHandler {
-    @Override
-    public String processEvent(JSONObject event, String userId) throws IllegalArgumentException, ParseException {
-        val tokens =
-                refreshTokens(
-                        retrieveTokens(userId).refresh_token,
-                        Utils.getAuthClient().clientId,
-                        Utils.getAuthClient().clientSecret,
-                        System.getenv(ENV_FENCE_TOKEN_ENDPOINT)
-                );
 
-        updateTokens(userId, tokens.getAccessToken().getValue(), tokens.getRefreshToken().getValue());
+  @Override
+  public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException, ParseException, IOException, URISyntaxException {
 
-        return String.format("{\"access_token\":\"%s\", \"refresh_token\":\"%s\"}", tokens.getAccessToken().getValue(), tokens.getRefreshToken().getValue());
+    val userId = request.getUserId();
+
+    val fenceKey = request.getQueryStringValue("fence");
+    val fence = FenceUtils.getProvider(fenceKey);
+    val authClient = FenceUtils.getAuthClient(fence);
+
+    val storedRefresh = FenceUtils.fetchRefreshToken(fence, userId);
+
+    if(storedRefresh.isPresent()) {
+
+      val refresh = storedRefresh.get();
+      val clientId = authClient.getClientId();
+      val clientSecret = authClient.getClientSecret();
+      val fenceEndpoint = fence.getEndpoint();
+
+      val tokensResponse = refreshTokens(refresh, clientId, clientSecret, fenceEndpoint);
+
+      if(tokensResponse.isPresent()) {
+        val tokens = tokensResponse.get();
+        FenceUtils.persistAccessToken(fence, userId, tokens.getAccessToken().getValue());
+        FenceUtils.persistRefreshToken(fence, userId, tokens.getAccessToken().getValue());
+
+        val body = new JSONObject();
+        body.put("access_token", tokens.getAccessToken().getValue());
+        body.put("refresh_token", tokens.getRefreshToken().getValue());
+
+        val resp = new LambdaResponse();
+        resp.addDefaultHeaders();
+        resp.setBody(body.toJSONString());
+        resp.setStatusCode(HttpURLConnection.HTTP_OK);
+        return resp;
+
+      } else {
+        throw new IOException("No response from fence.");
+
+      }
+
+    } else {
+      throw new IllegalArgumentException("Requested user has no stored refresh token.");
+
     }
 
-    public Tokens refreshTokens(String refresh_token, String client_id, String client_secret, String token_endpoint) {
+  }
 
-        try{
-            val request = new TokenRequest(
-                    new URI(token_endpoint),
-                    new ClientSecretBasic(
-                            new ClientID(client_id),
-                            new Secret(client_secret)
-                    ),
-                    new RefreshTokenGrant(
-                            new RefreshToken(refresh_token)
-                    )
-            );
+  public Optional<Tokens> refreshTokens(String refreshToken, String clientId, String clientSecret, String tokenEndpoint) throws URISyntaxException, IOException, ParseException {
 
-            val http_resp = TokenResponse.parse(request.toHTTPRequest().send());
+    val request = new TokenRequest(
+        new URI(tokenEndpoint),
+        new ClientSecretBasic(
+            new ClientID(clientId),
+            new Secret(clientSecret)
+        ),
+        new RefreshTokenGrant(
+            new RefreshToken(refreshToken)
+        )
+    );
 
-            val resp = http_resp.toSuccessResponse();
+    val http_resp = TokenResponse.parse(request.toHTTPRequest().send());
 
-            if(resp.indicatesSuccess())
-                return resp.getTokens();
+    val resp = http_resp.toSuccessResponse();
 
-        } catch (com.nimbusds.oauth2.sdk.ParseException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        return null;
-
+    if(resp.indicatesSuccess()) {
+      return Optional.of(resp.getTokens());
     }
+
+    return Optional.empty();
+
+  }
 }
