@@ -21,7 +21,7 @@
     <parent>
         <artifactId>keys</artifactId>
         <groupId>io.kidsfirst</groupId>
-        <version>1.2.1-SNAPSHOT</version>
+        <version>1.3.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -31,7 +31,7 @@
         <dependency>
             <groupId>io.kidsfirst</groupId>
             <artifactId>keys-core</artifactId>
-            <version>1.2.1-SNAPSHOT</version>
+            <version>1.3.0</version>
         </dependency>
     </dependencies>
 
