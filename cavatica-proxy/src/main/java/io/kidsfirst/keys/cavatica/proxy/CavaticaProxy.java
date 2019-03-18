@@ -63,10 +63,10 @@ public class CavaticaProxy extends LambdaRequestHandler {
       throw new IllegalArgumentException(String.format("Provided method '%s' is not allowed.", method));
     }
 
-    // Body - default to null
-    String body = request.getBodyString("body");
-    if (body.isEmpty()) {
-      body = null;
+    // Body - default to null, get body content if applicable
+    String body = null;
+    if ( Arrays.stream(new String[] {"POST", "PUT", "PATCH"}).anyMatch(m->m.equals(method)) ) {
+      request.getBodyString("body");
     }
 
     String cavaticaResponse = sendCavaticaRequest(cavaticaKey, path, method, body);
