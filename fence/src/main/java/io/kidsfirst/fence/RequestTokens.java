@@ -10,6 +10,7 @@ import io.kidsfirst.keys.core.LambdaRequestHandler;
 import io.kidsfirst.keys.core.model.LambdaRequest;
 import io.kidsfirst.keys.core.model.LambdaResponse;
 import io.kidsfirst.keys.core.utils.FenceUtils;
+import io.kidsfirst.keys.core.utils.JWTUtils;
 import lombok.val;
 import org.json.simple.JSONObject;
 

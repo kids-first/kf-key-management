@@ -54,17 +54,16 @@ public abstract class LambdaRequestHandler implements RequestHandler<LambdaReque
 
   }
 
-
   private static JSONObject formatException(Exception e) {
     val output = new JSONObject();
     output.put("error", e.getMessage());
 
     // Add Stack Trace if environment states debug
     val debug = System.getenv("debug");
-    if( debug != null && debug.equalsIgnoreCase("true")) {
+    if (debug != null && debug.equalsIgnoreCase("true")) {
       val sb = new StringBuffer();
       output.put("exception", e.getClass().getSimpleName());
-      for(StackTraceElement ste: e.getStackTrace()){
+      for (StackTraceElement ste : e.getStackTrace()) {
         sb.append(ste.getClassName() + "." + ste.getMethodName() + ": " + ste.getLineNumber() + "\n");
       }
       output.put("stack", sb.toString());
