@@ -1,6 +1,5 @@
 package io.kidsfirst.fence;
 
-import io.kidsfirst.fence.dao.FenceTokenDao;
 import io.kidsfirst.keys.core.LambdaRequestHandler;
 import io.kidsfirst.keys.core.exception.NotFoundException;
 import io.kidsfirst.keys.core.model.LambdaRequest;
