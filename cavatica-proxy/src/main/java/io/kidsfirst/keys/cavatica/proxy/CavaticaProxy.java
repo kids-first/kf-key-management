@@ -40,11 +40,13 @@ public class CavaticaProxy extends LambdaRequestHandler {
 
   static final String cavaticaApiRoot = System.getenv("cavatica_root");
 
-  private static int[] HTTP_SUCCESS_CODES = {HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_CREATED, HttpURLConnection.HTTP_ACCEPTED, HttpURLConnection.HTTP_NO_CONTENT, HttpURLConnection.HTTP_RESET};
-  private static String[] HTTP_ALLOWED_METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE"};
+  private static int[] HTTP_SUCCESS_CODES = { HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_CREATED,
+      HttpURLConnection.HTTP_ACCEPTED, HttpURLConnection.HTTP_NO_CONTENT, HttpURLConnection.HTTP_RESET };
+  private static String[] HTTP_ALLOWED_METHODS = { "GET", "POST", "PUT", "PATCH", "DELETE" };
 
   @Override
-  public LambdaResponse processEvent(final LambdaRequest request) throws IllegalAccessException, IllegalArgumentException, IOException {
+  public LambdaResponse processEvent(final LambdaRequest request)
+      throws IllegalAccessException, IllegalArgumentException, IOException {
 
     String userId = request.getUserId();
 
@@ -58,14 +60,14 @@ public class CavaticaProxy extends LambdaRequestHandler {
 
     // Method - confirm it is in HTTP_ALLOWED_METHODS or throw error
     String method = request.getBodyString("method").toUpperCase();
-    if ( Arrays.stream(HTTP_ALLOWED_METHODS).noneMatch(allowed -> allowed.equals(method)) ) {
+    if (Arrays.stream(HTTP_ALLOWED_METHODS).noneMatch(allowed -> allowed.equals(method))) {
       // Invalid method provided
       throw new IllegalArgumentException(String.format("Provided method '%s' is not allowed.", method));
     }
 
     // Body - default to null, get body content if applicable
     String body = null;
-    if ( Arrays.stream(new String[] {"POST", "PUT", "PATCH"}).anyMatch(m->m.equals(method)) ) {
+    if (Arrays.stream(new String[] { "POST", "PUT", "PATCH" }).anyMatch(m -> m.equals(method))) {
       request.getBodyString("body");
     }
 
@@ -92,11 +94,9 @@ public class CavaticaProxy extends LambdaRequestHandler {
     }
   }
 
+  private String sendCavaticaRequest(String cavaticaKey, String path, String method, String body) throws IOException {
 
-  private String sendCavaticaRequest(String cavaticaKey, String path, String method, String body)
-    throws IOException {
-
-    URL url = new URL(cavaticaApiRoot+path);
+    URL url = new URL(cavaticaApiRoot + path);
 
     HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
     con.setRequestMethod(method);
@@ -106,12 +106,11 @@ public class CavaticaProxy extends LambdaRequestHandler {
     con.setConnectTimeout(1000);
     con.setReadTimeout(5000);
 
-
     // Add secret key
     con.setRequestProperty("X-SBG-Auth-Token", cavaticaKey);
 
     // Add body
-    if(body != null) {
+    if (body != null) {
       con.setRequestProperty(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
       con.setDoOutput(true);
       DataOutputStream out = new DataOutputStream(con.getOutputStream());
