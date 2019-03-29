@@ -24,6 +24,7 @@ import io.kidsfirst.keys.core.model.Secret;
 import io.kidsfirst.keys.core.utils.KMSUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
+import org.json.simple.JSONObject;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -66,12 +67,14 @@ public class CavaticaProxy extends LambdaRequestHandler {
     }
 
     // Body - default to null, get body content if applicable
-    String body = null;
+    JSONObject body = null;
     if (Arrays.stream(new String[] { "POST", "PUT", "PATCH" }).anyMatch(m -> m.equals(method))) {
-      request.getBodyString("body");
+      body = (JSONObject) request.getBodyValue("body");
     }
 
-    String cavaticaResponse = sendCavaticaRequest(cavaticaKey, path, method, body);
+    String bodyString = body == null ? null : body.toJSONString();
+
+    String cavaticaResponse = sendCavaticaRequest(cavaticaKey, path, method, bodyString);
 
     resp.setBody(cavaticaResponse);
     resp.setStatusCode(HttpURLConnection.HTTP_OK);
