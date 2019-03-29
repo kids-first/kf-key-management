@@ -23,7 +23,7 @@
     <groupId>io.kidsfirst</groupId>
     <artifactId>keys</artifactId>
     <packaging>pom</packaging>
-    <version>2.0.1</version>
+    <version>2.0.2</version>
     <modules>
         <module>keys-core</module>
         <module>keys-delete</module>
