@@ -60,8 +60,7 @@ public class RefreshTokens extends LambdaRequestHandler {
         return resp;
 
       } else {
-        FenceUtils.removeFenceTokens(fence, userId);
-        throw new IllegalArgumentException("Failed refresh from fence. User needs to connect again.");
+        throw new IllegalArgumentException("Fence failed refresh attempt.");
 
       }
 
