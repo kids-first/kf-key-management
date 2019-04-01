@@ -44,7 +44,6 @@ public class RequestTokens extends LambdaRequestHandler {
       val body = new JSONObject();
       body.put("access_token", tokens.getAccessToken().getValue());
       body.put("refresh_token", tokens.getRefreshToken().getValue());
-      body.put("id_token", tokens.getIDTokenString());
 
       val resp = new LambdaResponse();
       resp.addDefaultHeaders();
