@@ -47,7 +47,7 @@ public class RefreshTokens extends LambdaRequestHandler {
       if(tokensResponse.isPresent()) {
         val tokens = tokensResponse.get();
         FenceUtils.persistAccessToken(fence, userId, tokens.getAccessToken().getValue());
-        FenceUtils.persistRefreshToken(fence, userId, tokens.getAccessToken().getValue());
+        FenceUtils.persistRefreshToken(fence, userId, tokens.getRefreshToken().getValue());
 
         val body = new JSONObject();
         body.put("access_token", tokens.getAccessToken().getValue());
@@ -60,7 +60,8 @@ public class RefreshTokens extends LambdaRequestHandler {
         return resp;
 
       } else {
-        throw new IOException("Failed refresh from fence.");
+        FenceUtils.removeFenceTokens(fence, userId);
+        throw new IllegalArgumentException("Failed refresh from fence. User needs to connect again.");
 
       }
 
@@ -97,11 +98,9 @@ public class RefreshTokens extends LambdaRequestHandler {
           .getOIDCTokens();
 
       return Optional.of(tokens);
-    } else {
-      throw new IOException(fenceResponse.getContent());
     }
 
-//    return Optional.empty();
+    return Optional.empty();
 
   }
 }
