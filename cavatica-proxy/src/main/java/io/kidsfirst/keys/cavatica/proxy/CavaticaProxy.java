@@ -107,7 +107,7 @@ public class CavaticaProxy extends LambdaRequestHandler {
     // standard connection setup
     con.setInstanceFollowRedirects(true);
     con.setConnectTimeout(1000);
-    con.setReadTimeout(5000);
+    con.setReadTimeout(10000);
 
     // Add secret key
     con.setRequestProperty("X-SBG-Auth-Token", cavaticaKey);
@@ -131,6 +131,7 @@ public class CavaticaProxy extends LambdaRequestHandler {
     String responseBody = content.toString();
 
     if (IntStream.of(HTTP_SUCCESS_CODES).noneMatch(code -> code == status)) {
+
       throw new IOException("Cavatica request failed. Returned status: " + status + " ; Message: " + responseBody);
     }
 
