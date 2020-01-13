@@ -20,6 +20,7 @@ public abstract class LambdaRequestHandler implements RequestHandler<LambdaReque
     public abstract LambdaResponse processEvent(final LambdaRequest request) throws Exception;
 
     public LambdaResponse handleRequest(final LambdaRequest input, final Context context) {
+        val start = System.currentTimeMillis();
         LambdaLogger logger = context.getLogger();
         var resp = new LambdaResponse();
         resp.addDefaultHeaders();
@@ -56,6 +57,9 @@ public abstract class LambdaRequestHandler implements RequestHandler<LambdaReque
 
         }
 
+        val end = System.currentTimeMillis();
+        val durationMs = start - end;
+        logger.log("Execution Duration of lambda (ms) = " + durationMs);
         return resp;
 
     }
