@@ -26,7 +26,6 @@ public class AppConfiguration extends WebSecurityConfigurerAdapter implements We
     private Environment env;
     private JWTService jwtService;
 
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     public AppConfiguration(JWTService jwtService, Environment env){
         this.env = env;
         this.jwtService = jwtService;

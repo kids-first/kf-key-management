@@ -29,7 +29,7 @@ public class DynamoDBManager extends DynamoDBMapper {
 
   private DynamoDBManager(Environment env) {
     super(env.getProperty("application.dynamodb.endpoint") == null ?
-            AmazonDynamoDBClient.builder().withRegion(Regions.US_EAST_1.getName()).build() :
+            AmazonDynamoDBClient.builder().build() :
             AmazonDynamoDBClient.builder().withEndpointConfiguration(
                     new AwsClientBuilder.EndpointConfiguration(env.getProperty("application.dynamodb.endpoint"), Regions.US_EAST_1.getName())
             ).build());
