@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: "keys"
+  main:
+    allow-bean-definition-overriding: true
+server:
+  port: 8080
+  servlet:
+    session:
+      cookie:
+        http-only: true
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types: "application/json"
+application:
+  debug: true
+  # Pipe delimited list of allowed domains.
+  corsAllowedDomains: "*"
+  aspect:
+    enabled: true
+  dynamodb:
+    endpoint: "http://localhost:8000"
+  fence_public: "__TBD__"
+  ego_public: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlvqX7PDezX7BC0yc14zwJw2qgs5KDyZZ vEeNowHCgHLcCtCVZ2JIx+ccUPp1FVudfZpLoboZ3RjT+6oOPHpNilXqUZfT81acCVHhvyJe7FNx dUWKpIIVKM/8bJj1pVkst0YHLBJ3KojZYJCMNUxUkyHM+yGrn9tmSdFBmwJnBLTkSxOrS2bvuZvk jERnoQJCoTm2XBKoCOzEuVPjIeB2KiFcNqiZwhjnCSQGPmg7fyJfQt1vMl+8RST3IXxphf8KKaWM l0rTXQhIHYL23P/tvC2lpJgx0rzgnxkAgFSrCxLstIklFAAg+j7ykivOyynIlCfXGv4cPTq5UqvI B8MBRQIDAQAB"
+  cavatica_root: "https://pgc-accounts.sbgenomics.com/v2"
+  secret_table: "kf-key-management-secret"
+  fence:
+    dcf:
+      client_id: "Jue4ZBwbuqK87nYbEWldwED7CxER7CgDt2I8a87Q"
+      client_secret: "__TBD__"
+      token_endpoint: "https://kf-key-manager.kidsfirstdrc.org/token?service=dcf"
+      redirect_uri: "https://portal.kidsfirstdrc.org/dcf_redirect/"
+      scope: "openid"
+    gen3:
+      client_id: "V3TPPDDL2T180uPTGy0bZID114KPsd0jczi0DoxV"
+      client_secret: "__TBD__"
+      token_endpoint: "https://kf-key-manager.kidsfirstdrc.org/token?service=gen3"
+      redirect_uri: "https://portal.kidsfirstdrc.org/gen3_redirect/"
+      scope: "openid"
+  kms: "__KMS_KEY_TBD__"
+  test:
+    access_token: "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2MTM2MDA2ODYsImV4cCI6MTYxMzY4NzA4Niwic3ViIjoiMDdhYTdhMmYtYzg5OS00NGIxLTk3YzAtM2U1MDkyOTU3MDgxIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiNDM4N2NlNzktZDgyOS00Y2IzLTk1NmQtNDE3OGZkOTE5ZjYxIiwiY29udGV4dCI6eyJ1c2VyIjp7Im5hbWUiOiJwbGFwbGFudGVAZmVybGFiLmJpbyIsImVtYWlsIjoicGxhcGxhbnRlQGZlcmxhYi5iaW8iLCJzdGF0dXMiOiJBcHByb3ZlZCIsImZpcnN0TmFtZSI6IlBhdHJpY2UiLCJsYXN0TmFtZSI6IkxhcGxhbnRlIiwiY3JlYXRlZEF0IjoiMjAyMC0xMS0xNiAwMzoyODoyOSIsImxhc3RMb2dpbiI6IjIwMjEtMDItMTcgMTA6MjQ6NDYiLCJwcmVmZXJyZWRMYW5ndWFnZSI6bnVsbCwicm9sZXMiOlsiVVNFUiJdLCJncm91cHMiOltdLCJwZXJtaXNzaW9ucyI6W119fX0.P9eFHrOe-JrTRmlYWQFl5udVnfsInZ-_iSfmpzcCSi0mUmHSzIbpmaa4PD1axzD4wUMvYvoDbRCn4hS0Oe4nIL4wdYQIIvHlpoMevhJLmp2_KlP_vvPoydeqq4SB5-tho4svDsohbzKcj1Jpb1FkQm0tPat_y-NAW2stOskzg8DiDzRKSj5z11U6jyZBm5s98K9FLeC84NvD-eO96ui3lmmcRDm7pa25Ld4i9MAV6nkFPmLOUu3RXmLLtsurn_sWAsuexfsKF3bBMPCGj2hev_mYN6acH2Qm5PclcxM91huH3EoLNKUetnyYNieGOZxEU9Z7qNLyAUxeUn9cimVIDw"
