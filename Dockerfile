@@ -10,6 +10,6 @@ FROM openjdk:11.0.4-jre-slim
 RUN mkdir -p /opt/kidsfirst/keys
 COPY --from=build-keys /tmp/kf-key-management/target/keys.jar /opt/kidsfirst/keys/keys.jar
 
-EXPOSE 8080
+EXPOSE 8443
 
 ENTRYPOINT ["java","-jar","/opt/kidsfirst/keys/keys.jar"]
