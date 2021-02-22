@@ -14,7 +14,7 @@ server:
     key-store-type: PKCS12
   http:
     port: 8080
-    force-ssl: false
+    force-ssl: true
   servlet:
     session:
       cookie:
