@@ -11,7 +11,7 @@ server:
     # JKS or PKCS12
     key-store-type: PKCS12
   http:
-    port: 8081
+    port: 8080
     force-ssl: false
   servlet:
     session:
