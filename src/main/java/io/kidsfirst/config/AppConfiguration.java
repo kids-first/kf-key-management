@@ -71,7 +71,7 @@ public class AppConfiguration extends WebSecurityConfigurerAdapter implements We
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
 
-        String allowedDomains = env.getProperty("application.corsAllowedDomains", "*");
+        String allowedDomains = env.getProperty("application.cors_allowed_domains", "*");
         String[] allowedDomainsArr = allowedDomains.split("\\|");
         for(int i=0; i<allowedDomainsArr.length; i++){
             config.addAllowedOrigin(allowedDomainsArr[i].trim());
