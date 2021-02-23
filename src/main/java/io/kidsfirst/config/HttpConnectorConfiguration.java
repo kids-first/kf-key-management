@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 //@Configuration
-public class HttpConnectorConfig {
+public class HttpConnectorConfiguration {
     @Value("${server.port}")
     private int httpsPort;
 

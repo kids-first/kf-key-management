@@ -6,7 +6,7 @@ spring:
   main:
     allow-bean-definition-overriding: true
 server:
-  port: 8080
+  port: 8081
 #  ssl:
 #    key-store: file:/home/plaplante/CHUST/projects/kidsfirst/kf-key-management-fork/ssl/plaplante.p12
 #    key-password: changeit
@@ -26,7 +26,7 @@ server:
 application:
   debug: false
   # Pipe delimited list of allowed domains.
-  cors_allowed_domains: "https://portal-qa.kidsfirstdrc.org"
+  cors_allowed_domains: "*"
   aspect:
     enabled: true
   dynamodb:
