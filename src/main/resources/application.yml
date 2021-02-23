@@ -6,15 +6,15 @@ spring:
   main:
     allow-bean-definition-overriding: true
 server:
-  port: 8443
-  ssl:
-    key-store: file:/home/plaplante/CHUST/projects/kidsfirst/kf-key-management-fork/ssl/plaplante.p12
-    key-password: changeit
-    # JKS or PKCS12
-    key-store-type: PKCS12
-  http:
-    port: 8080
-    force-ssl: true
+  port: 8080
+#  ssl:
+#    key-store: file:/home/plaplante/CHUST/projects/kidsfirst/kf-key-management-fork/ssl/plaplante.p12
+#    key-password: changeit
+#    # JKS or PKCS12
+#    key-store-type: PKCS12
+#  http:
+#    port: 8080
+#    force-ssl: true
   servlet:
     session:
       cookie:
