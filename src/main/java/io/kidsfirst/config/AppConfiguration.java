@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Slf4j
@@ -55,10 +56,10 @@ public class AppConfiguration extends WebSecurityConfigurerAdapter implements We
     }
 
     @Bean
-    public FilterRegistrationBean<AuthenticationFilter> authenticationFilterRegistrationBean() {
+    public FilterRegistrationBean<AuthenticationFilter> authenticationFilterRegistrationBean(HandlerExceptionResolver resolver) {
         FilterRegistrationBean<AuthenticationFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setOrder(2);
-        registrationBean.setFilter(new AuthenticationFilter(jwtService));
+        registrationBean.setFilter(new AuthenticationFilter(jwtService, resolver));
         registrationBean.addUrlPatterns("/cavatica","/refresh","/token","/key-store");
 
         return registrationBean;
