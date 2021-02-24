@@ -12,9 +12,6 @@ server:
 #    key-password: changeit
 #    # JKS or PKCS12
 #    key-store-type: PKCS12
-#  http:
-#    port: 8080
-#    force-ssl: true
   servlet:
     session:
       cookie:
@@ -29,8 +26,8 @@ application:
   cors_allowed_domains: "https://portal-qa.kidsfirstdrc.org"
   aspect:
     enabled: true
-  dynamodb:
-    endpoint: "http://localhost:8000"
+#  dynamodb:
+#    endpoint: "http://localhost:8000"
   fence_public: "__TBD__"
   ego_public: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlvqX7PDezX7BC0yc14zwJw2qgs5KDyZZ vEeNowHCgHLcCtCVZ2JIx+ccUPp1FVudfZpLoboZ3RjT+6oOPHpNilXqUZfT81acCVHhvyJe7FNx dUWKpIIVKM/8bJj1pVkst0YHLBJ3KojZYJCMNUxUkyHM+yGrn9tmSdFBmwJnBLTkSxOrS2bvuZvk jERnoQJCoTm2XBKoCOzEuVPjIeB2KiFcNqiZwhjnCSQGPmg7fyJfQt1vMl+8RST3IXxphf8KKaWM l0rTXQhIHYL23P/tvC2lpJgx0rzgnxkAgFSrCxLstIklFAAg+j7ykivOyynIlCfXGv4cPTq5UqvI B8MBRQIDAQAB"
   cavatica_root: "https://pgc-accounts.sbgenomics.com/v2"
