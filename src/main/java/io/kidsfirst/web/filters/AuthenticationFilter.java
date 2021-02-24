@@ -48,7 +48,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userId, auth);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (Exception e) {
-                log.error("Authentication failed.", e);
+                log.error("AuthenticationFilter failed.  Absent or invalid JWT token.");
                 resolver.resolveException(httpServletRequest, httpServletResponse, null, e);
             }
         }

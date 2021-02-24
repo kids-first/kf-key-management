@@ -9,27 +9,35 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.AbstractRequestMatcherRegistry;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.CorsProcessor;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Slf4j
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-public class AppConfiguration extends WebSecurityConfigurerAdapter implements WebMvcConfigurer {
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter /*implements WebMvcConfigurer */{
 
-    private Environment env;
-    private JWTService jwtService;
+    private final JWTService jwtService;
+    private final CorsFilter corsFilter;
 
-    public AppConfiguration(JWTService jwtService, Environment env){
-        this.env = env;
+    public SecurityConfiguration(JWTService jwtService, CorsFilter corsFilter){
         this.jwtService = jwtService;
+        this.corsFilter = corsFilter;
     }
 
     @Override
@@ -41,8 +49,8 @@ public class AppConfiguration extends WebSecurityConfigurerAdapter implements We
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
-                .cors();
+            .csrf().disable()
+            .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
     @Bean
@@ -64,27 +72,4 @@ public class AppConfiguration extends WebSecurityConfigurerAdapter implements We
 
         return registrationBean;
     }
-
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-
-        String allowedDomains = env.getProperty("application.cors_allowed_domains", "*");
-
-        log.debug("Allow domains : " + allowedDomains);
-
-        String[] allowedDomainsArr = allowedDomains.split("\\|");
-        for(int i=0; i<allowedDomainsArr.length; i++){
-            config.addAllowedOriginPattern(allowedDomainsArr[i].trim());
-        }
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-
-        return source;
-    }
-
 }
