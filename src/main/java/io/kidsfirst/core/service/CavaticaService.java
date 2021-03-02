@@ -28,7 +28,7 @@ public class CavaticaService {
     }
 
     public String sendCavaticaRequest(String cavaticaKey, String path, String method, String body) throws IOException {
-        String cavaticaRoot = env.getProperty("application.cavatica_root", env.getProperty("cavatica_root"));
+        String cavaticaRoot = env.getProperty("application.cavatica_root");
         if(cavaticaRoot == null){
             throw new RuntimeException("cavatica_root not defined");
         }
