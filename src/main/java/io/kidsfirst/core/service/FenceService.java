@@ -8,7 +8,6 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.kidsfirst.core.model.Provider;
-import io.kidsfirst.core.model.Secret;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Component;
@@ -60,17 +59,27 @@ public class FenceService {
     }
 
     public Optional<OIDCTokens> requestTokens(String authCode, Provider fence) throws ParseException, URISyntaxException, IOException {
+        String clientId = fence.getClientId();
+        String clientSecret = fence.getClientSecret();
+        String fenceEndpoint = fence.getEndpoint();
+        String redirectUri = fence.getRedirectUri();
+        log.info("request tokens, client_id={}, client_secret={}, fence_endpoint={}, auth_code={}, redirect_uri={}",
+                clientId,
+                obfuscate(clientSecret),
+                fenceEndpoint,
+                obfuscate(authCode),
+                redirectUri);
         val fenceRequest = new TokenRequest(
-                new URI(fence.getEndpoint()),
+                new URI(fenceEndpoint),
 
                 new ClientSecretBasic(
-                        new ClientID(fence.getClientId()),
-                        new com.nimbusds.oauth2.sdk.auth.Secret(fence.getClientSecret())
+                        new ClientID(clientId),
+                        new com.nimbusds.oauth2.sdk.auth.Secret(clientSecret)
                 ),
 
                 new AuthorizationCodeGrant(
                         new AuthorizationCode(authCode),
-                        new URI(fence.getRedirectUri())
+                        new URI(redirectUri)
                 ),
 
                 new Scope(fence.getScope())
