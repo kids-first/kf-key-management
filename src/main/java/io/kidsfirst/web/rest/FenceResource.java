@@ -104,18 +104,19 @@ public class FenceResource {
         val userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         val fence = fenceService.getProvider(fenceKey);
         val tokenResponse = fenceService.requestTokens(authCode, fence);
-
+        val body = new JSONObject();
         if(tokenResponse.isPresent()) {
             val tokens = tokenResponse.get();
             secretService.persistTokens(fence, userId, tokens);
 
-            val body = new JSONObject();
+
             body.put("access_token", tokens.getAccessToken().getValue());
             body.put("refresh_token", tokens.getRefreshToken().getValue());
 
             return ResponseEntity.ok(body);
         }
-        throw new IllegalAccessException("Fence did not return tokens for the provided code.");
+        log.error("Response token empty for fence {}", fenceKey);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
     @Timed

@@ -21,74 +21,82 @@ import java.util.Optional;
 @Component
 @Slf4j
 public class FenceService {
-  public Optional<Tokens> refreshTokens(String refreshToken, Provider fence) throws URISyntaxException, IOException, ParseException {
-    val clientId = fence.getClientId();
-    val clientSecret = fence.getClientSecret();
-    val fenceEndpoint = fence.getEndpoint();
+    private String obfuscate(String secret) {
+        return secret.substring(0,3) + "*******";
+    }
+    public Optional<Tokens> refreshTokens(String refreshToken, Provider fence) throws URISyntaxException, IOException, ParseException {
+        val clientId = fence.getClientId();
+        val clientSecret = fence.getClientSecret();
+        val fenceEndpoint = fence.getEndpoint();
 
-    val request = new TokenRequest(
-            new URI(fenceEndpoint),
-            new ClientSecretBasic(
-                    new ClientID(clientId),
-                    new com.nimbusds.oauth2.sdk.auth.Secret(clientSecret)
-            ),
-            new RefreshTokenGrant(
-                    new RefreshToken(refreshToken)
-            )
-    );
+        log.info("request tokens, client_id={}, client_secret={}, fence_endpoint={}, refresh_token={}",
+                clientId,
+                obfuscate(clientSecret),
+                fenceEndpoint,
+                obfuscate(refreshToken));
+        val request = new TokenRequest(
+                new URI(fenceEndpoint),
+                new ClientSecretBasic(
+                        new ClientID(clientId),
+                        new com.nimbusds.oauth2.sdk.auth.Secret(clientSecret)
+                ),
+                new RefreshTokenGrant(
+                        new RefreshToken(refreshToken)
+                )
+        );
 
-    val fenceResponse = request.toHTTPRequest().send();
+        val fenceResponse = request.toHTTPRequest().send();
 
-    if(fenceResponse.indicatesSuccess()) {
-      val tokens = OIDCTokenResponse
-              .parse(fenceResponse)
-              .toSuccessResponse()
-              .getOIDCTokens();
+        if (fenceResponse.indicatesSuccess()) {
+            val tokens = OIDCTokenResponse
+                    .parse(fenceResponse)
+                    .toSuccessResponse()
+                    .getOIDCTokens();
 
-      return Optional.of(tokens);
+            return Optional.of(tokens);
+        }
+
+        return Optional.empty();
     }
 
-    return Optional.empty();
-  }
+    public Optional<OIDCTokens> requestTokens(String authCode, Provider fence) throws ParseException, URISyntaxException, IOException {
+        val fenceRequest = new TokenRequest(
+                new URI(fence.getEndpoint()),
 
-  public Optional<OIDCTokens> requestTokens(String authCode, Provider fence) throws ParseException, URISyntaxException, IOException {
-    val fenceRequest = new TokenRequest(
-            new URI(fence.getEndpoint()),
+                new ClientSecretBasic(
+                        new ClientID(fence.getClientId()),
+                        new com.nimbusds.oauth2.sdk.auth.Secret(fence.getClientSecret())
+                ),
 
-            new ClientSecretBasic(
-                    new ClientID(fence.getClientId()),
-                    new com.nimbusds.oauth2.sdk.auth.Secret(fence.getClientSecret())
-            ),
+                new AuthorizationCodeGrant(
+                        new AuthorizationCode(authCode),
+                        new URI(fence.getRedirectUri())
+                ),
 
-            new AuthorizationCodeGrant(
-                    new AuthorizationCode(authCode),
-                    new URI(fence.getRedirectUri())
-            ),
+                new Scope(fence.getScope())
+        );
+        val fenceResponse = fenceRequest.toHTTPRequest().send();
 
-            new Scope(fence.getScope())
-    );
-    val fenceResponse = fenceRequest.toHTTPRequest().send();
+        if (fenceResponse.indicatesSuccess()) {
+            val tokens = OIDCTokenResponse
+                    .parse(fenceResponse)
+                    .toSuccessResponse()
+                    .getOIDCTokens();
 
-    if(fenceResponse.indicatesSuccess()) {
-      val tokens = OIDCTokenResponse
-              .parse(fenceResponse)
-              .toSuccessResponse()
-              .getOIDCTokens();
-
-      return Optional.of(tokens);
-    } else {
-      log.error("Error in  {} fence response : status={}, content={}", fence.name(), fenceResponse.getStatusCode(), fenceResponse.getContent() );
-      return Optional.empty();
+            return Optional.of(tokens);
+        } else {
+            log.error("Error in  {} fence response during request tokens: status={}, content={}", fence.name(), fenceResponse.getStatusCode(), fenceResponse.getContent());
+            return Optional.empty();
+        }
     }
-  }
 
-  public Provider getProvider(final String key) throws IllegalArgumentException {
-    try {
-      return Provider.valueOf(key.toUpperCase());
+    public Provider getProvider(final String key) throws IllegalArgumentException {
+        try {
+            return Provider.valueOf(key.toUpperCase());
 
-    } catch (IllegalArgumentException e) {
-      // Override default message for unknown enum constant
-      throw new IllegalArgumentException(String.format("Unknown fence identifier: %s", key), e);
+        } catch (IllegalArgumentException e) {
+            // Override default message for unknown enum constant
+            throw new IllegalArgumentException(String.format("Unknown fence identifier: %s", key), e);
+        }
     }
-  }
 }
