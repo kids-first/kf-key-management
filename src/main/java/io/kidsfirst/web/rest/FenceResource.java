@@ -6,8 +6,10 @@ import io.kidsfirst.core.model.Provider;
 import io.kidsfirst.core.service.FenceService;
 import io.kidsfirst.core.service.SecretService;
 import io.kidsfirst.core.utils.Timed;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.json.simple.JSONObject;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import java.net.URISyntaxException;
 
 @RestController
 @RequestMapping("/")
+@Slf4j
 public class FenceResource {
     
     private FenceService fenceService;
@@ -64,8 +67,11 @@ public class FenceResource {
                 body.put("refresh_token", tokens.getRefreshToken().getValue());
 
                 return ResponseEntity.ok(body);
+            }else{
+                log.info("Returned refresh token empty for fence {}, probably the token is too old to be refreshed", fenceKey);
+                val body = new JSONObject();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
             }
-            throw new IllegalArgumentException("Fence failed refresh attempt.");
         }
         throw new IllegalArgumentException("Requested user has no stored refresh token.");
     }
@@ -79,8 +85,10 @@ public class FenceResource {
         val accessToken = secretService.fetchAccessToken(fence, userId);
         val refreshToken = secretService.fetchRefreshToken(fence, userId);
 
-        if (!accessToken.isPresent() || !refreshToken.isPresent()) {
-            throw new NotFoundException(String.format("No token for Fence: %s", fenceKey));
+        if (accessToken.isEmpty() || refreshToken.isEmpty()) {
+            log.info("No token found for fence {}", fenceKey);
+            val body = new JSONObject();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
         val body = new JSONObject();
