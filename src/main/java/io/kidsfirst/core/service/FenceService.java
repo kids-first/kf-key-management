@@ -9,6 +9,7 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.kidsfirst.core.model.Provider;
 import io.kidsfirst.core.model.Secret;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ import java.net.URISyntaxException;
 import java.util.Optional;
 
 @Component
+@Slf4j
 public class FenceService {
   public Optional<Tokens> refreshTokens(String refreshToken, Provider fence) throws URISyntaxException, IOException, ParseException {
     val clientId = fence.getClientId();
@@ -75,6 +77,7 @@ public class FenceService {
 
       return Optional.of(tokens);
     } else {
+      log.error("Error in  {} fence response : status={}, content={}", fence.name(), fenceResponse.getStatusCode(), fenceResponse.getContent() );
       return Optional.empty();
     }
   }
