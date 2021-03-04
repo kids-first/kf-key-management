@@ -441,7 +441,6 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 
 		JSONObject response = (JSONObject)this.jsonParser.parse(result.getResponse().getContentAsString());
 		Assertions.assertNotNull(response.get("access_token"));
-		Assertions.assertNotNull(response.get("refresh_token"));
 	}
 
 	@Test
@@ -459,7 +458,6 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 
 		JSONObject response = (JSONObject)this.jsonParser.parse(result.getResponse().getContentAsString());
 		Assertions.assertNotNull(response.get("access_token"));
-		Assertions.assertNotNull(response.get("refresh_token"));
 	}
 
 	@Test
@@ -478,7 +476,6 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 
 		JSONObject response = (JSONObject)this.jsonParser.parse(result.getResponse().getContentAsString());
 		Assertions.assertNotNull(response.get("access_token"));
-		Assertions.assertNotNull(response.get("refresh_token"));
 	}
 
 }
