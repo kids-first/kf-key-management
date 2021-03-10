@@ -93,7 +93,6 @@ public class FenceResource {
 
         val body = new JSONObject();
         body.put("access_token", accessToken.orElse(""));
-        body.put("refresh_token", refreshToken.orElse(""));
 
         return ResponseEntity.ok(body);
     }
@@ -111,7 +110,6 @@ public class FenceResource {
 
 
             body.put("access_token", tokens.getAccessToken().getValue());
-            body.put("refresh_token", tokens.getRefreshToken().getValue());
 
             return ResponseEntity.ok(body);
         }
