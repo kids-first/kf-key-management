@@ -7,7 +7,6 @@ ecs_service_type_1_standard {
     dependencies = "ecr"
     create_default_iam_role = "0"
     entrypoint_command = "java -jar /opt/kidsfirst/keys/keys.jar"
-    external_config_repo = "false"
     quick_deploy = "true"
     create_additional_internal_alb = "0"
     container_port = "8080"
