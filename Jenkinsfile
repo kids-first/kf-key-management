@@ -12,4 +12,5 @@ ecs_service_type_1_standard {
     container_port = "8080"
     health_check_path = "/status"
     additional_ssl_cert_domain_name = "*.kidsfirstdrc.org"
+    publish_to_public_repo = "true"
 }
