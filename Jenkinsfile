@@ -8,7 +8,7 @@ ecs_service_type_1_standard {
     create_default_iam_role = "0"
     entrypoint_command = "java -jar /opt/kidsfirst/keys/keys.jar"
     quick_deploy = "true"
-    create_additional_internal_alb = "0"
+    create_additional_internal_alb = "1"
     container_port = "8080"
     health_check_path = "/status"
     additional_ssl_cert_domain_name = "*.kidsfirstdrc.org"
