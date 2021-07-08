@@ -8,6 +8,7 @@ import io.kidsfirst.core.utils.Timed;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.json.simple.JSONObject;
+import org.keycloak.KeycloakPrincipal;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,7 +30,7 @@ public class KeysResource {
     @Timed
     @GetMapping(produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> getSecret(@RequestParam("service") String service){
-        val userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        val userId = ((KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
         val secretValue = secretService.fetchAndDecrypt(userId, service);
 
         if (!secretValue.isPresent()) {
@@ -42,7 +43,7 @@ public class KeysResource {
     @Timed
     @PutMapping
     public ResponseEntity saveSecret(@RequestBody JSONObject body){
-        val userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        val userId = ((KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
 
         // === 1. Get service and secretValue from event
         val service =  (String)body.get("service");
@@ -60,7 +61,7 @@ public class KeysResource {
     @Timed
     @DeleteMapping
     public ResponseEntity deleteSecret(@RequestBody JSONObject body){
-        val userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        val userId = ((KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
         val service =  (String)body.get("service");
 
         secretDao.deleteSecret(service, userId);

@@ -1,8 +1,5 @@
 package io.kidsfirst.keys;
 
-import com.nimbusds.oauth2.sdk.TokenRequest;
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
@@ -13,17 +10,11 @@ import io.kidsfirst.core.model.Secret;
 import io.kidsfirst.core.service.CavaticaService;
 import io.kidsfirst.core.service.FenceService;
 import io.kidsfirst.core.service.KMSService;
-import io.kidsfirst.core.service.SecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.json.simple.JSONObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
@@ -36,8 +27,6 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 
 @Slf4j
 public class KfKeyManagementApplicationTests extends AbstractTest {
@@ -54,12 +43,12 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	@MockBean
 	FenceService fenceService;
 
-	private List<Secret> getSecretResult = new ArrayList<>();
-	private String encryptedString = "encryptedSecret";
-	private String decryptedString = "decryptedSecret";
+	private final List<Secret> getSecretResult = new ArrayList<>();
+	private final String encryptedString = "encryptedSecret";
+	private final String decryptedString = "decryptedSecret";
 
-	private String cavaticaURI = "/cavatica";
-	private String cavaticaResponseBody = "{" +
+	private final String cavaticaURI = "/cavatica";
+	private final String cavaticaResponseBody = "{" +
 			"  \"href\": \"https://cavatica-api.sbgenomics.com/v2/users/RFranklin\"," +
 			"  \"username\": \"RFranklin\"," +
 			"  \"email\": \"rosalind.franklin@sbgenomics.com\"," +
@@ -84,13 +73,15 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 			"  \"zip_code\": \"\"" +
 			"}";
 
-	private String fenceAuthClientUri = "/auth-client";
-	private String fenceTokenUri = "/token";
-	private String fenceRefreshUri = "/refresh";
-	private String keyStoreUri = "/key-store";
-	private String refreshTokenValue = "refreshTokenValue";
-	private String accessTokenValue = "accessTokenValue";
-	private String OICDJwtTokenValue = "OICDJwtTokenValue";
+	private final String fenceAuthClientUri = "/auth-client";
+	private final String fenceTokenUri = "/token";
+	private final String fenceRefreshUri = "/refresh";
+	private final String keyStoreUri = "/key-store";
+	private final String refreshTokenValue = "refreshTokenValue";
+	private final String accessTokenValue = "accessTokenValue";
+	private final String OICDJwtTokenValue = "OICDJwtTokenValue";
+
+	private final String accessToken = AuthUtils.createRsaToken("userId");
 
 	@PostConstruct
 	void setup(){
@@ -139,14 +130,40 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	}
 
 	@Test
+	void testCavaticaPostWithoutToken() throws Exception{
+		JSONObject content = new JSONObject();
+		content.put("path", "/user");
+		content.put("method", "GET");
+
+		JSONObject body = new JSONObject();
+		body.put("key1", "value1");
+		body.put("key2", "value2");
+		content.put("body", body);
+
+		MvcResult result = super.mvc.perform(
+				MockMvcRequestBuilders.post(cavaticaURI)
+						.accept(MediaType.APPLICATION_JSON_VALUE)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(content.toJSONString())
+		).andReturn();
+
+		int status = result.getResponse().getStatus();
+		Assertions.assertEquals(401, status);
+
+		String response = result.getResponse().getContentAsString();
+		Assertions.assertNotNull(response);
+	}
+
+	@Test
 	void testCavaticaPostWithoutBody() throws Exception{
 		JSONObject content = new JSONObject();
 		content.put("path", "/user");
 		content.put("method", "GET");
 
+		//-- Test POST (with empty body)
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.post(cavaticaURI)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON_VALUE)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(content.toJSONString())
@@ -170,10 +187,10 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 		body.put("key2", "value2");
 		content.put("body", body);
 
-		//-- Test POST (with empty body)
+
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.post(cavaticaURI)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON_VALUE)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(content.toJSONString())
@@ -195,7 +212,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 		//-- Test GET (not supported)
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.get(cavaticaURI)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON_VALUE)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(content.toJSONString())
@@ -222,7 +239,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testFenceDCFAuthClientGET() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.get(fenceAuthClientUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON_VALUE)
 						.contentType(MediaType.APPLICATION_JSON)
 						.queryParam("fence", "dcf")
@@ -241,7 +258,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testFenceGEN3AuthClientGET() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.get(fenceAuthClientUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON_VALUE)
 						.contentType(MediaType.APPLICATION_JSON)
 						.queryParam("fence", "gen3")
@@ -273,7 +290,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testKeyStoreGETContentTypeDifferentThanTextPlain() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.get(keyStoreUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON_VALUE)
 						.contentType(MediaType.APPLICATION_JSON)
 						.queryParam("service", "cavatica")
@@ -287,7 +304,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testKeyStoreGET() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.get(keyStoreUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.TEXT_PLAIN)
 						.contentType(MediaType.TEXT_PLAIN)
 						.queryParam("service", "cavatica")
@@ -307,7 +324,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.delete(keyStoreUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(body.toJSONString())
@@ -325,7 +342,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.put(keyStoreUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(body.toJSONString())
@@ -352,7 +369,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testFenceGEN3RefreshPOST() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.post(fenceRefreshUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON)
 						.contentType(MediaType.APPLICATION_JSON)
 						.queryParam("fence", "gen3")
@@ -370,7 +387,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testFenceDCFRefreshPOST() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.post(fenceRefreshUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON)
 						.contentType(MediaType.APPLICATION_JSON)
 						.queryParam("fence", "dcf")
@@ -388,7 +405,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testInvalidFenceRefreshPOST() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.post(fenceRefreshUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON)
 						.contentType(MediaType.APPLICATION_JSON)
 						.queryParam("fence", "unknown")
@@ -416,7 +433,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testFenceTokenDELETE() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.delete(fenceTokenUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON)
 						.contentType(MediaType.APPLICATION_JSON)
 						.queryParam("fence", "gen3")
@@ -430,7 +447,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testFenceDCFTokenGET() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.get(fenceTokenUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON)
 						.contentType(MediaType.APPLICATION_JSON)
 						.queryParam("fence", "dcf")
@@ -447,7 +464,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testFenceGEN3TokenGET() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.get(fenceTokenUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON)
 						.contentType(MediaType.APPLICATION_JSON)
 						.queryParam("fence", "gen3")
@@ -464,7 +481,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	void testFenceTokenPOST() throws Exception {
 		MvcResult result = super.mvc.perform(
 				MockMvcRequestBuilders.post(fenceTokenUri)
-						.header("Authorization", "Bearer " + this.env.getProperty("application.test.access_token"))
+						.header("Authorization", "Bearer " + accessToken)
 						.accept(MediaType.APPLICATION_JSON)
 						.contentType(MediaType.APPLICATION_JSON)
 						.queryParam("fence", "gen3")

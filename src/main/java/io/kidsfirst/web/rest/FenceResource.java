@@ -9,11 +9,14 @@ import io.kidsfirst.core.utils.Timed;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.json.simple.JSONObject;
+import org.keycloak.KeycloakPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.RolesAllowed;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -48,7 +51,7 @@ public class FenceResource {
     @Timed
     @PostMapping("/refresh")
     public ResponseEntity<JSONObject> refresh(@RequestParam("fence") String fenceKey)throws IllegalArgumentException, ParseException, IOException, URISyntaxException {
-        val userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        val userId = ((KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
 
         val fence = fenceService.getProvider(fenceKey);
         val storedRefresh = secretService.fetchRefreshToken(fence, userId);
@@ -79,7 +82,7 @@ public class FenceResource {
     @Timed
     @GetMapping("/token")
     public ResponseEntity<JSONObject> getTokens(@RequestParam("fence") String fenceKey) throws IllegalArgumentException, NotFoundException {
-        val userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        val userId = ((KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
         val fence = fenceService.getProvider(fenceKey);
 
         val accessToken = secretService.fetchAccessToken(fence, userId);
@@ -100,7 +103,7 @@ public class FenceResource {
     @Timed
     @PostMapping("/token")
     public ResponseEntity<JSONObject> requestTokens(@RequestParam("code") String authCode, @RequestParam("fence") String fenceKey) throws IllegalAccessException, IllegalArgumentException, ParseException, IOException, URISyntaxException {
-        val userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        val userId = ((KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
         val fence = fenceService.getProvider(fenceKey);
         val tokenResponse = fenceService.requestTokens(authCode, fence);
         val body = new JSONObject();
@@ -120,7 +123,7 @@ public class FenceResource {
     @Timed
     @DeleteMapping("/token")
     public ResponseEntity deleteToken(@RequestParam("fence") String fenceKey) throws IllegalArgumentException {
-        val userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        val userId = ((KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
         Provider fence = fenceService.getProvider(fenceKey);
         secretService.removeFenceTokens(fence, userId);
 

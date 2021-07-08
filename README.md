@@ -4,22 +4,32 @@
 
 # Kids First Key Management Lambdas
 
-AWS Lambda functions for storing user api tokens from third party services.
+Springboot application for storing user api tokens from third party services.
 
-Additionally provides a Lambda service to work as a proxy 
+## Dev Setup
 
-## Lambda Setup
+To run install and run test: `mvn clean install`
 
-The following environment variables are referenced in the code:
+To run application on your computer, you need a DynamoDB running:
+- Execute `launch.sh` script in docker directory
+- Uncomment dynamodb host config in application.yml (be careful with yml, dynamodb needs to be a child of application !)
+```
+#  dynamodb:
+#    endpoint: "http://localhost:8000"
+```
 
-| Variable Name        | Value         |
-| ---------- | ------------- |
-| `kms` | AWS KMS encryption key ID - used to encrypt/decrypt secrets before storage in dynamo DB. |
-| `ego_public` | Public Key of the ego instance that will be used to validate JWT tokens provided for user identification. |
-| `cavatica_root` | (*CavaticaProxy* only) URL to be used for Cavatica API. In Production: `https://cavatica-api.sbgenomics.com/v2` |
- 
-In *Basic settings* of the Lambda configuration, set Memory to 1024 and timeout to 15+ seconds. Otherwise the encryption/decryption steps will fail.
+You also need a KMS or you can just mock this service if you don't need it for your test.
 
+Also make sure, keycloak configuration is correct.
+```
+  keycloak:
+  realm: "KidsFirst"
+  auth-server-url: "http://localhost:8080/auth"
+  ssl-required: "external"
+  resource: "kf-key-management"
+  bearer-only: true
+  confidential-port: 0
+```
 
 ## Methods
 
