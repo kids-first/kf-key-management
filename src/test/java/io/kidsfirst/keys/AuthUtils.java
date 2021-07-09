@@ -56,11 +56,11 @@ public class AuthUtils {
                 .setSubject(sub)
                 .setId(UUID.randomUUID().toString())
                 .claim("typ", "Bearer")
-                .signWith(getPrivateKey())
+                .signWith(getRsaPrivateKey())
                 .compact();
     }
 
-    private static PrivateKey getPrivateKey(){
+    private static PrivateKey getRsaPrivateKey(){
         try{
             KeyFactory kf = KeyFactory.getInstance("RSA");
 
