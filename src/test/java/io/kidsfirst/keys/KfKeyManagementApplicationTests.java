@@ -81,10 +81,11 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 	private final String accessTokenValue = "accessTokenValue";
 	private final String OICDJwtTokenValue = "OICDJwtTokenValue";
 
-	private final String accessToken = AuthUtils.createRsaToken("userId");
+	private String accessToken = "";
 
 	@PostConstruct
 	void setup(){
+		accessToken = AuthUtils.createRsaToken("userId", keycloak.getFirstMappedPort());
 		getSecretResult.add(new Secret(RandomString.make(10),"cavatica", RandomString.make(10)));
 		getSecretResult.add(new Secret(RandomString.make(10),"cavatica", RandomString.make(10)));
 

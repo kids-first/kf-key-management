@@ -5,12 +5,11 @@ import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.core.env.Environment;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -24,7 +23,6 @@ import java.util.Collection;
 public abstract class AbstractTest {
 
     private static final int DYNAMODB_PORT = 8000;
-    private static final int KEYCLOAK_PORT_HTTP = 8123;
 
     @Autowired
     protected MockMvc mvc;
@@ -53,10 +51,16 @@ public abstract class AbstractTest {
     public static GenericContainer dynamodb = new GenericContainer<>("amazon/dynamodb-local:latest")
             .withExposedPorts(DYNAMODB_PORT);
 
-    @Container  // need to use it even if deprecated because need to know which port to use before runtime for configuration file
-    public static GenericContainer keycloak = new FixedHostPortGenericContainer("quay.io/keycloak/keycloak:13.0.1")
-            .withFixedExposedPort(KEYCLOAK_PORT_HTTP, 8080)
+    @Container
+    public static GenericContainer keycloak = new GenericContainer<>("quay.io/keycloak/keycloak:13.0.1")
+            .withExposedPorts(8080, 8443)
             .withEnv("KEYCLOAK_USER", "admin")
             .withEnv("KEYCLOAK_PASSWORD", "admin");
+
+    @DynamicPropertySource
+    static void setDynamicKeycloakPort(DynamicPropertyRegistry registry) {
+        registry.add("keycloak.auth-server-url",
+                () -> String.format("http://localhost:%d/auth", keycloak.getFirstMappedPort()));
+    }
 
 }

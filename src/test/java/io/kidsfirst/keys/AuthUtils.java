@@ -43,7 +43,7 @@ public class AuthUtils {
             "UHRulViQSxcYeYniwIvfInl9V8ngqqlKa9DG5W4PyqolPq1DNwWknZ86RlGzBGBr" +
             "7ZEXWb1xtL+9F5lQNmX6XQ==";
 
-    public static String createRsaToken(String sub) {
+    public static String createRsaToken(String sub, int keycloakPort) {
         Instant now = Instant.now();
 
         return Jwts.builder()
@@ -52,7 +52,7 @@ public class AuthUtils {
                 .setAudience("account")
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plus(5L, ChronoUnit.MINUTES)))
-                .setIssuer("http://localhost:8123/auth/realms/master")
+                .setIssuer(String.format("http://localhost:%d/auth/realms/master", keycloakPort))
                 .setSubject(sub)
                 .setId(UUID.randomUUID().toString())
                 .claim("typ", "Bearer")
