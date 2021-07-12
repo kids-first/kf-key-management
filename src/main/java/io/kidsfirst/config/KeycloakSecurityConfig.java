@@ -37,12 +37,10 @@ public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
         super.configure(http);
         http.authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS,"/**").permitAll()
-                .antMatchers("/refresh").authenticated()
-                .antMatchers("/token").authenticated()
-                .antMatchers("/cavatica").authenticated()
-                .antMatchers("/key-store").authenticated()
+                .antMatchers("/status").permitAll()
+                .antMatchers("/auth-client").permitAll()
                 .anyRequest()
-                .permitAll();
+                .authenticated();
         http.csrf().disable().addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
