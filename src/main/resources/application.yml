@@ -46,7 +46,7 @@ application:
   kms: "__KMS_KEY_TBD__"
 
 keycloak:
-  realm: "KidsFirst-test-CPE"
+  realm: "kidsfirstdrc"
   auth-server-url: "https://kf-keycloak-qa.kf-strides.org/auth"
   ssl-required: "external"
   resource: "kidsfirst-apis"
