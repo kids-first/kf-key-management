@@ -23,7 +23,7 @@ server:
 application:
   debug: false
   # Pipe delimited list of allowed domains.
-  cors_allowed_domains: "https://portal-qa.kidsfirstdrc.org"
+  cors_allowed_domains: "*"
   aspect:
     enabled: true
 #  dynamodb:
