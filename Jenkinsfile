@@ -5,7 +5,7 @@ ecs_service_type_1_standard {
     secrets_location = "kf-key-manager-keycloak"
     main_branch = "keycloak"
     internal_app = "false"
-    environments = "dev,qa,prd"
+    environments = "qa,prd"
     docker_image_type = "debian"
     dependencies = "ecr"
     create_default_iam_role = "0"
