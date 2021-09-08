@@ -26,8 +26,8 @@ application:
   cors_allowed_domains: "*"
   aspect:
     enabled: true
-  dynamodb:
-    endpoint: "http://localhost:8000"
+  # dynamodb:
+  #   endpoint: "http://localhost:8000"
   cavatica_root: "https://pgc-accounts.sbgenomics.com/v2"
   secret_table: "kf-key-management-secret"
   fence:
