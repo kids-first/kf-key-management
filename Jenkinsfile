@@ -2,7 +2,7 @@
 ecs_service_type_1_standard {
     projectName = "kf-key-manager"
     projectPrefix = "-keycloak"
-    secrets_location = "kf-key-manager-keycloak"
+    secrets_location = "kf-key-manager"
     main_branch = "keycloak"
     internal_app = "false"
     environments = "qa,prd"
