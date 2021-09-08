@@ -8,7 +8,7 @@ ecs_service_type_1_standard {
     environments = "qa,prd"
     docker_image_type = "debian"
     dependencies = "ecr"
-    create_default_iam_role = "1"
+    create_default_iam_role = "0"
     entrypoint_command = "java -jar /opt/kidsfirst/keys/keys.jar"
     quick_deploy = "true"
     create_additional_internal_alb = "1"
