@@ -45,9 +45,9 @@ application:
   kms: "__KMS_KEY_TBD__"
 keycloak:
   realm: "master"
-  realm-key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhPHTbpUgpyRTFCFTzlKGZ9/kgXER70SsiNrYV5B5zaT82+PjSHXX+s1MlwZujo0cjT+hfMP1BVojfqmVIMyS3r1Vw9u+H/yt4BnJL+1oT0wZzNJYVV67M03l+AI0fnqkPkv77S12K2qFpvfy7DaO7c0hLIHLBDv++Bwkuw1Qwp/ZaTFHMDiRMcDm8FjWGhkmYzH8A/OjBDGSvkrq8OEXSoptiDD9X4pPcUVdfVPdM38JfjmxHi9k1rGdCHlKSbOHWlp4/xi+L3xuFRqdebuOlVF6KUErb+a25RWupGMe9RO5yh7Do7SCfvn9UWBamwpK56D12yaIwJiPll6UmJyFEwIDAQAB"
-  auth-server-url: "http://localhost:8123/auth"
-  ssl-required: "external"
+  realm_key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhPHTbpUgpyRTFCFTzlKGZ9/kgXER70SsiNrYV5B5zaT82+PjSHXX+s1MlwZujo0cjT+hfMP1BVojfqmVIMyS3r1Vw9u+H/yt4BnJL+1oT0wZzNJYVV67M03l+AI0fnqkPkv77S12K2qFpvfy7DaO7c0hLIHLBDv++Bwkuw1Qwp/ZaTFHMDiRMcDm8FjWGhkmYzH8A/OjBDGSvkrq8OEXSoptiDD9X4pPcUVdfVPdM38JfjmxHi9k1rGdCHlKSbOHWlp4/xi+L3xuFRqdebuOlVF6KUErb+a25RWupGMe9RO5yh7Do7SCfvn9UWBamwpK56D12yaIwJiPll6UmJyFEwIDAQAB"
+  auth_server_url: "http://localhost:8123/auth"
+  ssl_required: "external"
   resource: "kf-key-management"
-  bearer-only: true
-  confidential-port: 0
+  bearer_only: true
+  confidential_port: 0
