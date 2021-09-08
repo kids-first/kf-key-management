@@ -44,7 +44,6 @@ application:
       redirect_uri: "https://portal.kidsfirstdrc.org/gen3_redirect/"
       scope: "openid"
   kms: "__KMS_KEY_TBD__"
-
 keycloak:
   realm: "kidsfirstdrc"
   auth-server-url: "https://kf-keycloak-qa.kf-strides.org/auth"
