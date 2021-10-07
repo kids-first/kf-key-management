@@ -5,7 +5,7 @@ COPY . .
 
 RUN ./mvnw package -DskipTests
 
-FROM openjdk:11.0.4-jre-slim
+FROM openjdk:11-jre-slim
 
 RUN mkdir -p /opt/kidsfirst/keys
 COPY --from=build-keys /tmp/kf-key-management/target/keys.jar /opt/kidsfirst/keys/keys.jar
