@@ -7,10 +7,14 @@ import io.kidsfirst.core.service.SecretService;
 import io.kidsfirst.core.utils.Timed;
 import lombok.val;
 import org.json.simple.JSONObject;
+import org.keycloak.KeycloakPrincipal;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -39,7 +43,7 @@ public class CavaticaResource {
     @Timed
     @PostMapping
     public ResponseEntity<String> cavatica(@RequestBody(required = false) JSONObject requestBody, HttpServletRequest request) throws IOException{
-        val userId = (String)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        val userId = ((KeycloakPrincipal)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
         val cavaticaKey = getCavaticaKey(userId);
 
         // Path

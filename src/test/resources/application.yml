@@ -1,5 +1,4 @@
-# In order to override the following configurations :
-# java -jar keys.jar --spring.config.location=classpath:/application.yml,file:./application-prod.yml
+# Test config
 spring:
   application:
     name: "keys"
@@ -7,11 +6,11 @@ spring:
     allow-bean-definition-overriding: true
 server:
   port: 8080
-#  ssl:
-#    key-store: file:/home/plaplante/CHUST/projects/kidsfirst/kf-key-management-fork/ssl/plaplante.p12
-#    key-password: changeit
-#    # JKS or PKCS12
-#    key-store-type: PKCS12
+  #  ssl:
+  #    key-store: file:/home/plaplante/CHUST/projects/kidsfirst/kf-key-management-fork/ssl/plaplante.p12
+  #    key-password: changeit
+  #    # JKS or PKCS12
+  #    key-store-type: PKCS12
   servlet:
     session:
       cookie:
@@ -23,11 +22,11 @@ server:
 application:
   debug: false
   # Pipe delimited list of allowed domains.
-  cors_allowed_domains: "*"
+  cors_allowed_domains: "https://portal-qa.kidsfirstdrc.org"
   aspect:
     enabled: true
-  # dynamodb:
-  #   endpoint: "http://localhost:8000"
+  dynamodb:
+    endpoint: "http://localhost:8000"
   cavatica_root: "https://pgc-accounts.sbgenomics.com/v2"
   secret_table: "kf-key-management-secret"
   fence:
@@ -45,9 +44,10 @@ application:
       scope: "openid"
   kms: "__KMS_KEY_TBD__"
 keycloak:
-  realm: "kidsfirstdrc"
-  auth_server_url: "https://kf-keycloak-qa.kf-strides.org/auth"
+  realm: "master"
+  realm_key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhPHTbpUgpyRTFCFTzlKGZ9/kgXER70SsiNrYV5B5zaT82+PjSHXX+s1MlwZujo0cjT+hfMP1BVojfqmVIMyS3r1Vw9u+H/yt4BnJL+1oT0wZzNJYVV67M03l+AI0fnqkPkv77S12K2qFpvfy7DaO7c0hLIHLBDv++Bwkuw1Qwp/ZaTFHMDiRMcDm8FjWGhkmYzH8A/OjBDGSvkrq8OEXSoptiDD9X4pPcUVdfVPdM38JfjmxHi9k1rGdCHlKSbOHWlp4/xi+L3xuFRqdebuOlVF6KUErb+a25RWupGMe9RO5yh7Do7SCfvn9UWBamwpK56D12yaIwJiPll6UmJyFEwIDAQAB"
+  auth_server_url: "http://localhost:8123/auth"
   ssl_required: "external"
-  resource: "kidsfirst-apis"
+  resource: "kf-key-management"
   bearer_only: true
   confidential_port: 0
