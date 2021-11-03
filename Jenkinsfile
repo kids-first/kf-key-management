@@ -2,7 +2,7 @@
 ecs_service_type_1_standard {
     projectName = "kf-key-manager"
     internal_app = "false"
-    environments = "qa,prd"
+    environments = "dev,qa,prd"
     docker_image_type = "debian"
     dependencies = "ecr"
     create_default_iam_role = "0"
