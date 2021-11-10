@@ -41,7 +41,6 @@ Also make sure, keycloak configuration is correct.
 All methods require a JWT in the Authorization header which can be verified with the public key provided in the configuration. Without a valid token the request will be rejected. The UserID is taken from the `sub` field of the JWT.
 
 
-
 ### GET SECRET
 
 Retrieve a stored secret for a given `service` . If no key is stored for that user with the mathcing service name then an empty 204 response will be returned.
