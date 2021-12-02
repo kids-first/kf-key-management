@@ -1,0 +1,15 @@
+@Library(value='kids-first/aws-infra-jenkins-shared-libraries', changelog=false) _
+deploy {
+    architecture_type = "aws-ecs-service-type-1"
+    jenkinsfile_name = "app.deploy"
+    environments = "qa,prd"
+    projectName = "key-manager"
+
+    internal_app = "false"
+    docker_image_type = "debian"
+    dependencies = "ecr"
+    create_default_iam_role = "0"
+    entrypoint_command = "java -jar /opt/kidsfirst/keys/keys.jar"
+    container_port = "8080"
+    health_check_path = "/status"
+}
