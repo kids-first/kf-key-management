@@ -28,11 +28,6 @@ public class FenceService {
         val clientSecret = fence.getClientSecret();
         val fenceEndpoint = fence.getEndpoint();
 
-        log.debug("request tokens, client_id={}, client_secret={}, fence_endpoint={}, refresh_token={}",
-                clientId,
-                obfuscate(clientSecret),
-                fenceEndpoint,
-                obfuscate(refreshToken));
         val request = new TokenRequest(
                 new URI(fenceEndpoint),
                 new ClientSecretBasic(
@@ -63,12 +58,6 @@ public class FenceService {
         String clientSecret = fence.getClientSecret();
         String fenceEndpoint = fence.getEndpoint();
         String redirectUri = fence.getRedirectUri();
-        log.debug("request tokens, client_id={}, client_secret={}, fence_endpoint={}, auth_code={}, redirect_uri={}",
-                clientId,
-                obfuscate(clientSecret),
-                fenceEndpoint,
-                obfuscate(authCode),
-                redirectUri);
         val fenceRequest = new TokenRequest(
                 new URI(fenceEndpoint),
 
