@@ -4,13 +4,15 @@ spring:
     name: "keys"
   main:
     allow-bean-definition-overriding: true
+
+zuul:
+  routes:
+    foos:
+      path: /cavatica2/**
+      url: https://cavatica-api.sbgenomics.com/v2
+
 server:
   port: 8080
-  #  ssl:
-  #    key-store: file:/home/plaplante/CHUST/projects/kidsfirst/kf-key-management-fork/ssl/plaplante.p12
-  #    key-password: changeit
-  #    # JKS or PKCS12
-  #    key-store-type: PKCS12
   servlet:
     session:
       cookie:
