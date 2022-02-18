@@ -1,18 +1,14 @@
 package io.kidsfirst.web.rest;
 
-import io.kidsfirst.core.dao.SecretDao;
-import io.kidsfirst.core.exception.NotFoundException;
+import com.nimbusds.jose.shaded.json.JSONObject;
 import io.kidsfirst.core.model.Secret;
 import io.kidsfirst.core.service.SecretService;
-import io.kidsfirst.core.utils.Timed;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.json.simple.JSONObject;
-import org.keycloak.KeycloakPrincipal;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
@@ -20,52 +16,43 @@ import org.springframework.web.bind.annotation.*;
 public class KeysResource {
 
     private final SecretService secretService;
-    private final SecretDao secretDao;
 
-    public KeysResource(SecretService secretService, SecretDao secretDao){
+    public KeysResource(SecretService secretService){
         this.secretService = secretService;
-        this.secretDao = secretDao;
     }
 
-    @Timed
     @GetMapping(produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> getSecret(@RequestParam("service") String service){
-        val userId = ((KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
-        val secretValue = secretService.fetchAndDecrypt(userId, service);
+    public Mono<String> getSecret(@RequestParam("service") String service, JwtAuthenticationToken authentication){
+        val userId = authentication.getTokenAttributes().get("sub").toString();
 
-        if (!secretValue.isPresent()) {
-            throw new NotFoundException(String.format("No value found for: %s", service));
-        }
-
-        return ResponseEntity.ok(secretValue.get());
+        return secretService.fetchAndDecrypt(userId, service);
     }
 
-    @Timed
     @PutMapping
-    public ResponseEntity saveSecret(@RequestBody JSONObject body){
-        val userId = ((KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
+    public Mono<Void> saveSecret(@RequestBody JSONObject body, JwtAuthenticationToken authentication){
+        val userId = authentication.getTokenAttributes().get("sub").toString();
 
         // === 1. Get service and secretValue from event
         val service =  (String)body.get("service");
         val secretValue =  (String)body.get("secret");
 
         // === 2. Create a Secret to hold the data
-        Secret secret = new Secret(userId, service, secretValue);
+        val secret = new Secret(userId, service, secretValue);
 
         // === 3. Save to dynamo DB
-        secretService.encryptAndSave(secret);
+        return secretService.encryptAndSave(secret).then();
 
-        return ResponseEntity.ok().build();
+
     }
 
-    @Timed
     @DeleteMapping
-    public ResponseEntity deleteSecret(@RequestBody JSONObject body){
-        val userId = ((KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
+    public Mono<Void> deleteSecret(@RequestBody JSONObject body, JwtAuthenticationToken authentication){
+        val userId = authentication.getTokenAttributes().get("sub").toString();
         val service =  (String)body.get("service");
 
-        secretDao.deleteSecret(service, userId);
+        return secretService.deleteSecret(service, userId).then();
 
-        return ResponseEntity.ok().build();
     }
+
+
 }

@@ -5,12 +5,6 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
-zuul:
-  routes:
-    foos:
-      path: /cavatica2/**
-      url: https://cavatica-api.sbgenomics.com/v2
-
 server:
   port: 8080
   servlet:

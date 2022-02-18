@@ -1,36 +1,10 @@
 package io.kidsfirst.keys;
 
-import com.nimbusds.oauth2.sdk.token.AccessToken;
-import com.nimbusds.oauth2.sdk.token.AccessTokenType;
-import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import com.nimbusds.oauth2.sdk.token.Tokens;
-import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
-import io.kidsfirst.core.dao.SecretDao;
-import io.kidsfirst.core.model.Secret;
-import io.kidsfirst.core.service.CavaticaService;
-import io.kidsfirst.core.service.FenceService;
-import io.kidsfirst.core.service.KMSService;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.internal.bytebuddy.utility.RandomString;
-import org.json.simple.JSONObject;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 
 @Slf4j
 public class KfKeyManagementApplicationTests extends AbstractTest {
-
+/*
 	@MockBean
 	SecretDao secretDao;
 
@@ -495,5 +469,5 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 		JSONObject response = (JSONObject)this.jsonParser.parse(result.getResponse().getContentAsString());
 		Assertions.assertNotNull(response.get("access_token"));
 	}
-
+*/
 }

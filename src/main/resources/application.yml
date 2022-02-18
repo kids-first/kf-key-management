@@ -5,17 +5,14 @@ spring:
     name: "keys"
   main:
     allow-bean-definition-overriding: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://127.0.0.1:18080/auth/realms/kf
+
 server:
-  port: 8080
-#  ssl:
-#    key-store: file:/home/plaplante/CHUST/projects/kidsfirst/kf-key-management-fork/ssl/plaplante.p12
-#    key-password: changeit
-#    # JKS or PKCS12
-#    key-store-type: PKCS12
-  servlet:
-    session:
-      cookie:
-        http-only: true
+  port: 8090
   compression:
     enabled: true
     min-response-size: 1024
@@ -24,11 +21,9 @@ application:
   debug: false
   # Pipe delimited list of allowed domains.
   cors_allowed_domains: "*"
-  aspect:
-    enabled: true
   # dynamodb:
   #   endpoint: "http://localhost:8000"
-  cavatica_root: "https://pgc-accounts.sbgenomics.com/v2"
+  cavatica_root: "https://cavatica-api.sbgenomics.com/v2"
   secret_table: "kf-key-management-secret"
   fence:
     dcf:
@@ -44,10 +39,4 @@ application:
       redirect_uri: "https://portal.kidsfirstdrc.org/gen3_redirect/"
       scope: "openid"
   kms: "__KMS_KEY_TBD__"
-keycloak:
-  realm: "kidsfirstdrc"
-  auth_server_url: "https://kf-keycloak-qa.kf-strides.org/auth"
-  ssl_required: "external"
-  resource: "kidsfirst-apis"
-  bearer_only: true
-  confidential_port: 0
+

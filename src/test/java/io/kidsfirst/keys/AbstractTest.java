@@ -1,27 +1,14 @@
 package io.kidsfirst.keys;
 
-import org.json.simple.parser.JSONParser;
-import org.junit.jupiter.api.Assertions;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.env.Environment;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
 public abstract class AbstractTest {
-
+/*
     private static final int DYNAMODB_PORT = 8000;
 
     @Autowired
@@ -62,5 +49,5 @@ public abstract class AbstractTest {
         registry.add("keycloak.auth-server-url",
                 () -> String.format("http://localhost:%d/auth", keycloak.getFirstMappedPort()));
     }
-
+*/
 }
