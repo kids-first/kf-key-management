@@ -4,7 +4,9 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import io.kidsfirst.core.service.CavaticaService;
 import io.kidsfirst.core.service.SecretService;
 import lombok.val;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,7 +32,7 @@ public class CavaticaResource {
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<String> cavatica(@RequestBody(required = false) JSONObject requestBody, JwtAuthenticationToken authentication) {
+    public Mono<ResponseEntity<String>> cavatica(@RequestBody(required = false) JSONObject requestBody, JwtAuthenticationToken authentication) {
         val userId = authentication.getTokenAttributes().get("sub").toString();
         val cavaticaKey = getCavaticaKey(userId);
 
@@ -43,8 +45,7 @@ public class CavaticaResource {
         // Method
         String method = ((String) requestBody.get("method")).toUpperCase();
         if (Arrays.stream(HTTP_ALLOWED_METHODS).noneMatch(allowed -> allowed.equals(method))) {
-            // Invalid method provided
-            throw new IllegalArgumentException(String.format("Provided method '%s' is not allowed.", method));
+            return Mono.just(ResponseEntity.badRequest().build());
         }
 
         // Body
@@ -52,7 +53,9 @@ public class CavaticaResource {
         val body = bodyMap != null ? new JSONObject(bodyMap) : null;
         val bodyString = body == null ? "" : body.toJSONString();
 
-        return cavaticaKey.flatMap(key -> cavaticaService.sendCavaticaRequest(key, path, method, bodyString));
+        return cavaticaKey.flatMap(key -> cavaticaService.sendCavaticaRequest(key, path, method, bodyString))
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 
     private Mono<String> getCavaticaKey(String userId) throws IllegalArgumentException {

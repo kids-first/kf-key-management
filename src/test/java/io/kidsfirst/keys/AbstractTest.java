@@ -1,29 +1,56 @@
 package io.kidsfirst.keys;
 
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.nimbusds.jose.shaded.json.parser.JSONParser;
+import dasniko.testcontainers.keycloak.KeycloakContainer;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.Environment;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.function.Consumer;
+
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-public abstract class AbstractTest {
-/*
+@AutoConfigureWebTestClient(timeout = "5000")
+public abstract class AbstractTest{
+
     private static final int DYNAMODB_PORT = 8000;
-
-    @Autowired
-    protected MockMvc mvc;
-
-    @Autowired
-    protected WebApplicationContext webApplicationContext;
 
     @Autowired
     protected Environment env;
 
+    @Autowired
+    protected WebTestClient webClient;
+
     protected JSONParser jsonParser = new JSONParser();
 
-    protected void assertArraysEqualIgnoreOrder(Object[] expected, Object[] actual) {
-        assertArraysEqualIgnoreOrder(Arrays.asList(expected), Arrays.asList(actual));
+    @RegisterExtension
+    static WireMockExtension cavticaWM = WireMockExtension.newInstance()
+            .options(wireMockConfig().dynamicPort())
+            .build();
+
+    protected Consumer<String> matchValues(String... others) {
+        return s -> MatcherAssert.assertThat(Arrays.asList(s.split(",")), Matchers.hasItems(others));
     }
 
     protected void assertArraysEqualIgnoreOrder(Collection expected, Collection actual) {
@@ -39,15 +66,40 @@ public abstract class AbstractTest {
             .withExposedPorts(DYNAMODB_PORT);
 
     @Container
-    public static GenericContainer keycloak = new GenericContainer<>("quay.io/keycloak/keycloak:13.0.1")
-            .withExposedPorts(8080, 8443)
-            .withEnv("KEYCLOAK_USER", "admin")
-            .withEnv("KEYCLOAK_PASSWORD", "admin");
+    public static KeycloakContainer keycloak = new KeycloakContainer()
+            .withAdminUsername("admin")
+            .withAdminPassword("admin");
+//    public static GenericContainer keycloak = new GenericContainer<>("quay.io/keycloak/keycloak:16.1.1")
+//            .withExposedPorts(8080)
+//            .withEnv("KEYCLOAK_USER", "admin")
+//            .withEnv("KEYCLOAK_PASSWORD", "admin")
+//            .waitingFor(Wait.forHttp("/auth/realms/master/.well-known/openid-configuration"));
 
     @DynamicPropertySource
     static void setDynamicKeycloakPort(DynamicPropertyRegistry registry) {
-        registry.add("keycloak.auth-server-url",
-                () -> String.format("http://localhost:%d/auth", keycloak.getFirstMappedPort()));
+        registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri",
+                () -> String.format("http://localhost:%d/realms/master", keycloak.getHttpPort()));
     }
-*/
+
+    @DynamicPropertySource
+    static void setDynamicDynamodbPort(DynamicPropertyRegistry registry) {
+        registry.add("aws.dynamodb.endpoint",
+                () -> String.format("http://localhost:%d", dynamodb.getFirstMappedPort()));
+    }
+
+    @DynamicPropertySource
+    static void setCavaticaUri(DynamicPropertyRegistry registry) {
+//        try {
+//            keycloak.execInContainer("/opt/jboss/keycloak/bin/add-user-keycloak.sh -u user -p user");
+//        } catch (Exception e) {
+//            throw new IllegalStateException(e);
+//        }
+        registry.add("application.cavatica_root",
+                () -> cavticaWM.baseUrl());
+    }
+
+
+
+
+
 }

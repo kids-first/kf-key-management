@@ -1,4 +1,8 @@
 # Test config
+aws:
+  region: us-east-1
+  accessKey: test
+  secretKey: test
 spring:
   application:
     name: "keys"
@@ -23,17 +27,17 @@ application:
     enabled: true
   dynamodb:
     endpoint: "http://localhost:8000"
-  cavatica_root: "https://pgc-accounts.sbgenomics.com/v2"
+  cavatica_root: "https://cavatica-api.sbgenomics.com/v2"
   secret_table: "kf-key-management-secret"
   fence:
     dcf:
-      client_id: "Jue4ZBwbuqK87nYbEWldwED7CxER7CgDt2I8a87Q"
+      client_id: "dcf_client_id"
       client_secret: "__TBD__"
       token_endpoint: "https://kf-key-manager.kidsfirstdrc.org/token?service=dcf"
       redirect_uri: "https://portal.kidsfirstdrc.org/dcf_redirect/"
       scope: "openid"
     gen3:
-      client_id: "V3TPPDDL2T180uPTGy0bZID114KPsd0jczi0DoxV"
+      client_id: "gen3_client_id"
       client_secret: "__TBD__"
       token_endpoint: "https://kf-key-manager.kidsfirstdrc.org/token?service=gen3"
       redirect_uri: "https://portal.kidsfirstdrc.org/gen3_redirect/"
