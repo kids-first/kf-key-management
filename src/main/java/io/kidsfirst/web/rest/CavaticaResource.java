@@ -1,85 +1,67 @@
 package io.kidsfirst.web.rest;
 
-import io.kidsfirst.core.model.Secret;
+import com.nimbusds.jose.shaded.json.JSONObject;
 import io.kidsfirst.core.service.CavaticaService;
-import io.kidsfirst.core.service.KMSService;
 import io.kidsfirst.core.service.SecretService;
-import io.kidsfirst.core.utils.Timed;
 import lombok.val;
-import org.json.simple.JSONObject;
-import org.keycloak.KeycloakPrincipal;
-import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/cavatica")
 public class CavaticaResource {
 
-    private SecretService secretService;
-    private KMSService kmsService;
-    private CavaticaService cavaticaService;
-    private Environment env;
+    private final SecretService secretService;
+    private final CavaticaService cavaticaService;
 
-    private final String[] HTTP_ALLOWED_METHODS = new String[]{ "GET", "POST", "PUT", "PATCH", "DELETE" };
+    private final String[] HTTP_ALLOWED_METHODS = new String[]{"GET", "POST", "PUT", "PATCH", "DELETE"};
 
-    public CavaticaResource(SecretService secretService, KMSService kmsService, CavaticaService cavaticaService, Environment env){
+    public CavaticaResource(SecretService secretService,  CavaticaService cavaticaService) {
         this.secretService = secretService;
-        this.kmsService = kmsService;
         this.cavaticaService = cavaticaService;
-        this.env = env;
     }
 
-    @Timed
-    @PostMapping
-    public ResponseEntity<String> cavatica(@RequestBody(required = false) JSONObject requestBody, HttpServletRequest request) throws IOException{
-        val userId = ((KeycloakPrincipal)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getName();
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> cavatica(@RequestBody(required = false) JSONObject requestBody, JwtAuthenticationToken authentication) {
+        val userId = authentication.getTokenAttributes().get("sub").toString();
         val cavaticaKey = getCavaticaKey(userId);
 
         // Path
-        val path = (String)requestBody.get("path");
+        val path = (String) requestBody.get("path");
         if (path == null) {
-            throw new IllegalArgumentException(String.format("No Parameter found for 'path' in body."));
+            throw new IllegalArgumentException("No Parameter found for 'path' in body.");
         }
 
         // Method
-        String method = ((String)requestBody.get("method")).toUpperCase();
+        String method = ((String) requestBody.get("method")).toUpperCase();
         if (Arrays.stream(HTTP_ALLOWED_METHODS).noneMatch(allowed -> allowed.equals(method))) {
-            // Invalid method provided
-            throw new IllegalArgumentException(String.format("Provided method '%s' is not allowed.", method));
+            return Mono.just(ResponseEntity.badRequest().build());
         }
 
         // Body
-        val bodyMap = (Map)requestBody.get("body");
+        val bodyMap = (Map) requestBody.get("body");
         val body = bodyMap != null ? new JSONObject(bodyMap) : null;
-        val bodyString = body == null ? null : body.toJSONString();
+        val bodyString = body == null ? "" : body.toJSONString();
 
-        val cavaticaResponse = cavaticaService.sendCavaticaRequest(cavaticaKey, path, method, bodyString);
-
-        return ResponseEntity.ok(cavaticaResponse);
+        return cavaticaKey.flatMap(key -> cavaticaService.sendCavaticaRequest(key, path, method, bodyString))
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 
-    private String getCavaticaKey(String userId) throws IllegalArgumentException {
-        List<Secret> allSecrets = secretService.getSecret("cavatica", userId);
+    private Mono<String> getCavaticaKey(String userId) throws IllegalArgumentException {
+        return secretService.fetchAndDecrypt(userId, "cavatica");
 
-        if (!allSecrets.isEmpty()) {
-            Secret secret = allSecrets.get(0);
-            String secretValue = secret.getSecret();
-
-            return kmsService.decrypt(secretValue);
-
-        } else {
-            throw new IllegalArgumentException("No Cavatica token available; unable to send request.");
-        }
     }
+
+
 }

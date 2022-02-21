@@ -1,73 +1,54 @@
 package io.kidsfirst.core.service;
 
-import org.apache.http.HttpHeaders;
-import org.apache.http.entity.ContentType;
-import org.springframework.core.env.Environment;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.stream.IntStream;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class CavaticaService {
 
-    private Environment env;
+    private final WebClient client;
 
-    private final int[] HTTP_SUCCESS_CODES = { HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_CREATED,
-            HttpURLConnection.HTTP_ACCEPTED, HttpURLConnection.HTTP_NO_CONTENT, HttpURLConnection.HTTP_RESET };
+    public CavaticaService(@Value("${application.cavatica_root}") String cavaticaRoot) {
+        val httpClient = HttpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .responseTimeout(Duration.ofMillis(5000))
+                .doOnConnected(conn ->
+                        conn.addHandlerLast(new ReadTimeoutHandler(10000, TimeUnit.MILLISECONDS))
+                                .addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS)));
 
-
-    public CavaticaService(Environment env){
-        this.env = env;
+        this.client = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .baseUrl(cavaticaRoot)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
     }
 
-    public String sendCavaticaRequest(String cavaticaKey, String path, String method, String body) throws IOException {
-        String cavaticaRoot = env.getProperty("application.cavatica_root");
-        if(cavaticaRoot == null){
-            throw new RuntimeException("cavatica_root not defined");
-        }
-
-        URL url = new URL( cavaticaRoot + path);
-
-        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-        con.setRequestMethod(method);
-
-        // standard connection setup
-        con.setInstanceFollowRedirects(true);
-        con.setConnectTimeout(1000);
-        con.setReadTimeout(10000);
-
-        // Add secret key
-        con.setRequestProperty("X-SBG-Auth-Token", cavaticaKey);
-
-        // Add body
-        if (body != null) {
-            con.setRequestProperty(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
-            con.setDoOutput(true);
-            DataOutputStream out = new DataOutputStream(con.getOutputStream());
-            out.writeBytes(body);
-            out.flush();
-            out.close();
-        }
-
-        int status = con.getResponseCode();
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        StringBuilder content = new StringBuilder();
-        reader.lines().forEach(content::append);
-        reader.close();
-        String responseBody = content.toString();
-
-        if (IntStream.of(HTTP_SUCCESS_CODES).noneMatch(code -> code == status)) {
-            throw new IOException("Cavatica request failed. Returned status: " + status + " ; Message: " + responseBody);
-        }
-
-        return responseBody;
+    public Mono<String> sendCavaticaRequest(String cavaticaKey, String path, String method, String body) {
+        return client
+                .method(HttpMethod.valueOf(method))
+                .uri(path).bodyValue(body)
+                .header("X-SBG-Auth-Token", cavaticaKey)
+                .exchangeToMono(r -> {
+                    if (r.statusCode().is2xxSuccessful()) {
+                        return r.bodyToMono(String.class);
+                    } else {
+                        return r.createException()
+                                .flatMap(Mono::error);
+                    }
+                });
     }
 }
