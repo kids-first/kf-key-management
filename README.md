@@ -22,13 +22,12 @@ You also need a KMS or you can just mock this service if you don't need it for y
 
 Also make sure, keycloak configuration is correct.
 ```
-  keycloak:
-  realm: "KidsFirst"
-  auth-server-url: "http://localhost:8080/auth"
-  ssl-required: "external"
-  resource: "kf-key-management"
-  bearer-only: true
-  confidential-port: 0
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://127.0.0.1:18080/auth/realms/kf
 ```
 
 ## Methods

@@ -7,8 +7,6 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -16,10 +14,13 @@ import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.regions.Region;
@@ -28,12 +29,10 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder;
 
 import javax.annotation.PostConstruct;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.function.Consumer;
+import java.util.concurrent.ExecutionException;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -46,9 +45,6 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 
     @MockBean
     private KMSService kmsService;
-
-    private static final String encryptedString = "encryptedSecret";
-    private static final String decryptedString = "decryptedSecret";
 
     private final String cavaticaURI = "/cavatica";
     private final String cavaticaResponseBody = "{" +
@@ -80,11 +76,10 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
     private final String fenceTokenUri = "/token";
     private final String fenceRefreshUri = "/refresh";
     private final String keyStoreUri = "/key-store";
-    private final String refreshTokenValue = "refreshTokenValue";
-    private final String accessTokenValue = "accessTokenValue";
-    private final String OICDJwtTokenValue = "OICDJwtTokenValue";
+    private final static String KF_CLIENT_ID = "kf";
     private static DynamoDbEnhancedAsyncClient dynamoClient;
-    private String accessToken = "";
+    private static String defaultCavaticaAccessToken = "";
+    private static DynamoDbAsyncTable<Secret> secretTable;
 
     @BeforeAll
     static void init() {
@@ -95,47 +90,26 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
                 .build();
 
         try {
-            dynamoClient.table("kf-key-management-secret", TableSchema.fromBean(Secret.class)).createTable().get();
+            secretTable = dynamoClient.table("kf-key-management-secret", TableSchema.fromBean(Secret.class));
+            secretTable.createTable().get();
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
-        createKeycloakClient();
-        val userId = createKeycloakUser("test", "test", "test@test.org", "John", "Doe");
-        createSecret("cavatica", userId, "cavatica_secret");
+        createKeycloakClient(KF_CLIENT_ID);
+        val userAndToken = createUserAndSecretAndObtainAccessToken("cavatica", "cavatica_secret");
+        defaultCavaticaAccessToken = userAndToken.getAccessToken();
+
+    }
 
 
-        /*String userId1 = RandomString.make(10);
-        val secret1 = new Secret(userId1,"cavatica", RandomString.make(10));
-        String userId2 = RandomString.make(10);
-        val secret2 = new Secret(userId2,"cavatica", RandomString.make(10));
+    private static UserIdAndToken createUserAndSecretAndObtainAccessToken(String service, String secret) {
+        val username = RandomStringUtils.random(10, true, false);
+        val password = RandomStringUtils.random(10, true, false);
+        val userId = createKeycloakUser(username, password, "test" + username + "@test.org", RandomStringUtils.random(10, true, false), RandomStringUtils.random(10, true, false));
+        createSecret(service, userId, secret);
+        String accessToken = obtainAccessToken(username, password);
 
-		given(secretService.getSecret("cavatica", userId1)).willReturn(Mono.just(secret1));
-		given(secretService.getSecret("cavatica", userId2)).willReturn(Mono.just(secret2));
-		given(kmsService.encrypt(any())).willReturn(encryptedString);
-		given(kmsService.decrypt(any())).willReturn(decryptedString);
-
-
-		try {
-			given(cavaticaService.sendCavaticaRequest(any(), any(), any(), any())).willReturn(Mono.just(cavaticaResponseBody));
-
-			AccessToken accessToken = new AccessToken(AccessTokenType.BEARER, accessTokenValue) {
-				@Override
-				public String toAuthorizationHeader() {
-					return this.getType().getValue() + " " + this.getValue();
-				}
-			};
-			RefreshToken refreshToken = new RefreshToken(refreshTokenValue);
-
-			Tokens tokens = new Tokens(accessToken, refreshToken);
-			OIDCTokens oidcTokens = new OIDCTokens(OICDJwtTokenValue, accessToken, refreshToken);
-
-			given(fenceService.refreshTokens(any(), any())).willReturn(Mono.just(tokens));
-			given(fenceService.requestTokens(any(), any())).willReturn(Mono.just(oidcTokens));
-			given(fenceService.getProvider(any())).willCallRealMethod();
-		} catch (Exception e) {
-			// Mocked - it will not throw any exception.
-			log.error("Should never get here.", e);
-		}*/
+        return new UserIdAndToken(userId, accessToken);
     }
 
     @PostConstruct
@@ -143,8 +117,6 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
         given(kmsService.encrypt(any())).willAnswer(invocation -> "encrypted_" + invocation.getArgument(0));
         given(kmsService.decrypt(any())).willAnswer(invocation -> "decrypted_" + invocation.getArgument(0));
 
-                //willReturn().willReturn(decryptedString);
-        accessToken = obtainAccessToken("test", "test");
     }
 
     public static void createSecret(String service, String userId, String secret) {
@@ -169,9 +141,9 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
         return CreatedResponseUtil.getCreatedId(response);
     }
 
-    private static void createKeycloakClient() {
+    public static void createKeycloakClient(String clientId) {
         ClientRepresentation client = new ClientRepresentation();
-        client.setClientId("kf");
+        client.setClientId(clientId);
         client.setEnabled(true);
         client.setPublicClient(false);
         client.setDirectAccessGrantsEnabled(true);
@@ -187,7 +159,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
                 .formParam("grant_type", "password")
                 .formParam("username", username)
                 .formParam("password", password)
-                .formParam("client_id", "kf")
+                .formParam("client_id", KfKeyManagementApplicationTests.KF_CLIENT_ID)
                 .formParam("client_secret", CLIENT_SECRET)
                 .post(tokenUrl);
 
@@ -218,7 +190,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 
         webClient.post()
                 .uri(cavaticaURI)
-                .bodyValue(body.toJSONString())
+                .bodyValue(content.toJSONString())
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isUnauthorized();
@@ -237,12 +209,12 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
         JSONObject content = new JSONObject();
         content.put("path", "/user");
         content.put("method", "GET");
-        cavticaWM.stubFor(get("/user").willReturn(ok(cavaticaResponseBody)));
+        cavaticaWM.stubFor(get("/user").willReturn(ok(cavaticaResponseBody)));
         webClient.post()
                 .uri("/cavatica")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + accessToken)
+                .header("Authorization", "Bearer " + defaultCavaticaAccessToken)
                 .bodyValue(content.toJSONString())
                 .exchange()
                 .expectStatus().isOk()
@@ -262,12 +234,12 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
         body.put("key2", "value2");
         content.put("body", body);
 
-        cavticaWM.stubFor(get("/user").willReturn(ok(cavaticaResponseBody)));
+        cavaticaWM.stubFor(get("/user").willReturn(ok(cavaticaResponseBody)));
         webClient.post()
                 .uri("/cavatica")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + accessToken)
+                .header("Authorization", "Bearer " + defaultCavaticaAccessToken)
                 .bodyValue(content.toJSONString())
                 .exchange()
                 .expectStatus().isOk()
@@ -279,12 +251,12 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
         JSONObject content = new JSONObject();
         content.put("path", "/user");
         content.put("method", "UNSUPORTED");
-        cavticaWM.stubFor(get("/user").willReturn(ok(cavaticaResponseBody)));
+        cavaticaWM.stubFor(get("/user").willReturn(ok(cavaticaResponseBody)));
         webClient.post()
                 .uri("/cavatica")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + accessToken)
+                .header("Authorization", "Bearer " + defaultCavaticaAccessToken)
                 .bodyValue(content.toJSONString())
                 .exchange()
                 .expectStatus().isEqualTo(400);
@@ -296,7 +268,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
                 .uri(fenceAuthClientUri)
                 .exchange()
                 .expectStatus().is2xxSuccessful()
-                .expectHeader().value("Allow", matchValues("GET","HEAD","OPTIONS"));
+                .expectHeader().value("Allow", matchValues("GET", "HEAD", "OPTIONS"));
 
     }
 
@@ -307,7 +279,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
                         .path(fenceAuthClientUri)
                         .queryParam("fence", "dcf")
                         .build())
-                .header("Authorization", "Bearer " + accessToken)
+                .header("Authorization", "Bearer " + defaultCavaticaAccessToken)
 
                 .exchange()
                 .expectStatus().is2xxSuccessful()
@@ -323,7 +295,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
                         .path(fenceAuthClientUri)
                         .queryParam("fence", "gen3")
                         .build())
-                .header("Authorization", "Bearer " + accessToken)
+                .header("Authorization", "Bearer " + defaultCavaticaAccessToken)
 
                 .exchange()
                 .expectStatus().is2xxSuccessful()
@@ -345,13 +317,12 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
     }
 
 
-
     @Test
     void testKeyStoreGETContentTypeDifferentThanTextPlain() {
         webClient.get()
                 .uri(keyStoreUri)
                 .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + accessToken)
+                .header("Authorization", "Bearer " + defaultCavaticaAccessToken)
                 .exchange()
                 .expectStatus().isEqualTo(406)
                 .expectHeader();
@@ -360,196 +331,192 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 
     @Test
     void testKeyStoreGET() {
-       val body= webClient.get()
+        val body = webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path(keyStoreUri)
                         .queryParam("service", "cavatica")
                         .build())
                 .accept(MediaType.TEXT_PLAIN)
-                .header("Authorization", "Bearer " + accessToken)
+                .header("Authorization", "Bearer " + defaultCavaticaAccessToken)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody().returnResult().getResponseBody();
         assert body != null;
         assertThat(new String(body)).isEqualTo("decrypted_cavatica_secret");
     }
-/*
+
     @Test
-    void testKeyStoreDELETE() throws Exception {
+    void testKeyStoreDELETE() throws ExecutionException, InterruptedException {
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("cavatica", "my_secret");
         JSONObject body = new JSONObject();
         body.put("service", "cavatica");
-
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.delete(keyStoreUri)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body.toJSONString())
-        ).andReturn();
-
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(200, status);
+        webClient
+                .method(HttpMethod.DELETE)
+                .uri(keyStoreUri)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .bodyValue(body.toJSONString())
+                .exchange()
+                .expectStatus().isOk();
+        val secret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "cavatica", null)).get();
+        assertThat(secret).isNull();
     }
 
     @Test
     void testKeyStorePUT() throws Exception {
+        String my_secret = "my_secret";
         JSONObject body = new JSONObject();
         body.put("service", "cavatica");
-        body.put("secret", "60ebf2b87bba49a2f932c8c7a8daa639");
+        body.put("secret", my_secret);
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("cavatica", my_secret);
+        webClient
+                .put()
+                .uri(keyStoreUri)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .bodyValue(body.toJSONString())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody();
 
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.put(keyStoreUri)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body.toJSONString())
-        ).andReturn();
-
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(200, status);
+        val secret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "cavatica", null)).get();
+        assertThat(secret).isNotNull();
+        assertThat(secret.getSecret()).isEqualTo("encrypted_" + my_secret);
     }
 
     @Test
-    void testFenceRefreshPreflight() throws Exception {
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.options(fenceRefreshUri)
-        ).andReturn();
+    void testFenceRefreshPreflight() {
+        webClient.options()
+                .uri(fenceRefreshUri)
+                .exchange()
+                .expectStatus().is2xxSuccessful()
+                .expectHeader()
+                .value("Allow", matchValues("POST", "OPTIONS"));
 
-        String[] allowedMethods = ((String) result.getResponse().getHeaderValue("Allow")).split(",");
-        this.assertArraysEqualIgnoreOrder(new String[]{"POST", "OPTIONS"}, allowedMethods);
-
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(200, status);
     }
 
     @Test
-    void testFenceGEN3RefreshPOST() throws Exception {
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.post(fenceRefreshUri)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
+    void testFenceRefreshPOST() throws Exception {
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_refresh", "secret");
+        JSONObject content = new JSONObject();
+        content.put("access_token", "this_is_access_token");
+        content.put("refresh_token", "this_is_refresh_token");
+        content.put("token_type", "BEARER");
+        gen3VM.stubFor(post("/").willReturn(ok(content.toJSONString()).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
+        webClient
+                .post()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceRefreshUri)
                         .queryParam("fence", "gen3")
-        ).andReturn();
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.access_token").value(o -> assertThat(o).isEqualTo("this_is_access_token"))
+                .jsonPath("$.refresh_token").value(o -> assertThat(o).isEqualTo("this_is_refresh_token"));
 
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(200, status);
+        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null)).get();
+        assertThat(accessSecret).isNotNull();
+        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_access_token");
 
-        JSONObject response = (JSONObject) this.jsonParser.parse(result.getResponse().getContentAsString());
-        Assertions.assertNotNull(response.get("access_token"));
-        Assertions.assertNotNull(response.get("refresh_token"));
+        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null)).get();
+        assertThat(refreshSecret).isNotNull();
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_refresh_token");
+
+    }
+
+
+    @Test
+    void testFenceTokenPreflight() {
+        webClient.options()
+                .uri(fenceTokenUri)
+                .exchange()
+                .expectStatus().is2xxSuccessful()
+                .expectHeader()
+
+                .value("Allow", matchValues("GET", "HEAD", "DELETE", "POST", "OPTIONS"));
+
     }
 
     @Test
-    void testFenceDCFRefreshPOST() throws Exception {
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.post(fenceRefreshUri)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .queryParam("fence", "dcf")
-        ).andReturn();
-
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(200, status);
-
-        JSONObject response = (JSONObject) this.jsonParser.parse(result.getResponse().getContentAsString());
-        Assertions.assertNotNull(response.get("access_token"));
-        Assertions.assertNotNull(response.get("refresh_token"));
-    }
-
-    @Test
-    void testInvalidFenceRefreshPOST() throws Exception {
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.post(fenceRefreshUri)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .queryParam("fence", "unknown")
-        ).andReturn();
-
-        // Expect bad request
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(400, status);
-    }
-
-    @Test
-    void testFenceTokenPreflight() throws Exception {
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.options(fenceTokenUri)
-        ).andReturn();
-
-        String[] allowedMethods = ((String) result.getResponse().getHeaderValue("Allow")).split(",");
-        this.assertArraysEqualIgnoreOrder(new String[]{"GET", "HEAD", "DELETE", "POST", "OPTIONS"}, allowedMethods);
-
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(200, status);
-    }
-
-    @Test
-    void testFenceTokenDELETE() throws Exception {
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.delete(fenceTokenUri)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
+    void testFenceTokenDELETE() throws ExecutionException, InterruptedException {
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "secret");
+        createSecret("fence_gen3_refresh", userIdAndToken.getUserId(), "secret");
+        webClient
+                .delete()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceTokenUri)
                         .queryParam("fence", "gen3")
-        ).andReturn();
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange().expectStatus().isOk();
+        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null)).get();
+        assertThat(accessSecret).isNull();
 
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(200, status);
+        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null)).get();
+        assertThat(refreshSecret).isNull();
+
+
     }
 
-    @Test
-    void testFenceDCFTokenGET() throws Exception {
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.get(fenceTokenUri)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .queryParam("fence", "dcf")
-        ).andReturn();
 
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(200, status);
-
-        JSONObject response = (JSONObject) this.jsonParser.parse(result.getResponse().getContentAsString());
-        Assertions.assertNotNull(response.get("access_token"));
-    }
 
     @Test
-    void testFenceGEN3TokenGET() throws Exception {
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.get(fenceTokenUri)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
+    void testFenceGEN3TokenGET() {
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token");
+        createSecret("fence_gen3_refresh", userIdAndToken.getUserId(), "this_is_refresh_token");
+        webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceTokenUri)
                         .queryParam("fence", "gen3")
-        ).andReturn();
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.access_token").value(o -> assertThat(o).isEqualTo("decrypted_this_is_access_token"));
 
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(200, status);
-
-        JSONObject response = (JSONObject) this.jsonParser.parse(result.getResponse().getContentAsString());
-        Assertions.assertNotNull(response.get("access_token"));
     }
 
     @Test
     void testFenceTokenPOST() throws Exception {
-        MvcResult result = super.mvc.perform(
-                MockMvcRequestBuilders.post(fenceTokenUri)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("other", "this_is_access_token");
+        JSONObject content = new JSONObject();
+        content.put("access_token", "this_is_access_token");
+        content.put("refresh_token", "this_is_refresh_token");
+        content.put("token_type", "BEARER");
+        gen3VM.stubFor(post("/").willReturn(ok(content.toJSONString()).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
+        webClient
+                .post()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceTokenUri)
                         .queryParam("fence", "gen3")
                         .queryParam("code", "anAuthCodeValue")
-        ).andReturn();
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.access_token").value(o -> assertThat(o).isEqualTo("this_is_access_token"))
+                .jsonPath("$.refresh_token").value(o -> assertThat(o).isEqualTo("this_is_refresh_token"));
 
-        int status = result.getResponse().getStatus();
-        Assertions.assertEquals(200, status);
+        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null)).get();
+        assertThat(accessSecret).isNotNull();
+        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_access_token");
 
-        JSONObject response = (JSONObject) this.jsonParser.parse(result.getResponse().getContentAsString());
-        Assertions.assertNotNull(response.get("access_token"));
+        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null)).get();
+        assertThat(refreshSecret).isNotNull();
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_refresh_token");
+
     }
-*/
+
 }
