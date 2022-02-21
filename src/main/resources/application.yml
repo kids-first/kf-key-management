@@ -12,7 +12,7 @@ spring:
           issuer-uri: http://127.0.0.1:18080/auth/realms/kf
 
 server:
-  port: 8090
+  port: 8080
   compression:
     enabled: true
     min-response-size: 1024
