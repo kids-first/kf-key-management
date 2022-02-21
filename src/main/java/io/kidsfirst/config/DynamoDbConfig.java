@@ -21,10 +21,10 @@ public class DynamoDbConfig {
     private final String accessKey;
     private final String secretKey;
 
-    public DynamoDbConfig(@Value("${aws.dynamodb.endpoint}") String dynamoDbEndPointUrl,
-                          @Value("${aws.region}") String region,
-                          @Value("${aws.accessKey}") String accessKey,
-                          @Value("${aws.secretKey}") String secretKey) {
+    public DynamoDbConfig(@Value("${aws.dynamodb.endpoint#{null}}") String dynamoDbEndPointUrl,
+                          @Value("${aws.region#{null}}") String region,
+                          @Value("${aws.accessKey#{null}}") String accessKey,
+                          @Value("${aws.secretKey#{null}}") String secretKey) {
         this.dynamoDbEndPointUrl = dynamoDbEndPointUrl;
         this.region = region;
         this.accessKey = accessKey;
