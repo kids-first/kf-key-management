@@ -70,10 +70,9 @@
         <!-- KMS -->
         <dependency>
             <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk</artifactId>
-            <version>1.12.154</version>
+            <artifactId>aws-java-sdk-kms</artifactId>
+            <version>1.12.162</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.projectlombok</groupId>
