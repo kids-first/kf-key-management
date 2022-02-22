@@ -1,39 +1,81 @@
 package io.kidsfirst.core.service;
 
-import com.amazonaws.encryptionsdk.AwsCrypto;
-import com.amazonaws.encryptionsdk.CommitmentPolicy;
-import com.amazonaws.encryptionsdk.kms.KmsMasterKeyProvider;
+import com.amazonaws.services.kms.AWSKMS;
+import com.amazonaws.services.kms.AWSKMSAsyncClient;
+import com.amazonaws.services.kms.model.DecryptRequest;
+import com.amazonaws.services.kms.model.EncryptRequest;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Service
 public class KMSService {
 
-    final AwsCrypto crypto;
-    final KmsMasterKeyProvider keyProvider;
+    private final String keyId;
+    private final AWSKMS kms;
 
     public KMSService(@Value("${application.kms}") String keyId) {
+        this.keyId = keyId;
+        this.kms = AWSKMSAsyncClient.asyncBuilder().build();
+    }
 
-        this.crypto = AwsCrypto.builder().withCommitmentPolicy(CommitmentPolicy.RequireEncryptRequireDecrypt)
-                .build();
+    public Mono<String> encrypt(String original) {
+        return Mono.fromCallable(() -> {
+            try {
+                val bufferedOriginal = StringToByteBuffer(original);
+                val encryptRequest = new EncryptRequest();
+                encryptRequest.withKeyId(keyId);
+                encryptRequest.setPlaintext(bufferedOriginal);
 
-        this.keyProvider = KmsMasterKeyProvider.builder().buildStrict(keyId);
+                val result = kms.encrypt(encryptRequest);
+                val bufferedCipher = result.getCiphertextBlob();
+                return ByteBufferToString(bufferedCipher);
+
+            } catch (UnsupportedEncodingException e) {
+                // Shouldn't be reachable, handle anyways
+                log.error(e.getMessage(), e);
+                return null;
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
 
     }
 
-    public String encrypt(String original) {
-        val result = crypto.encryptData(keyProvider, original.getBytes());
-        return new String(result.getResult());
+    public Mono<String> decrypt(String cipher) {
+        return Mono.fromCallable(() -> {
+            try {
+                val bufferedCipher = StringToByteBuffer(cipher);
+                val decryptRequest = new DecryptRequest();
+                decryptRequest.setCiphertextBlob(bufferedCipher);
+
+                val result = kms.decrypt(decryptRequest);
+                val bufferedOriginal = result.getPlaintext();
+                return ByteBufferToString(bufferedOriginal);
+
+            } catch (UnsupportedEncodingException e) {
+                // Shouldn't be reachable, handle anyways
+                log.error(e.getMessage(), e);
+                return null;
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
+
     }
 
-    public String decrypt(String cipher) {
-        val result = crypto.decryptData(keyProvider, cipher.getBytes());
-        return new String(result.getResult());
-
+    private ByteBuffer StringToByteBuffer(String string) throws UnsupportedEncodingException {
+        val bytes = string.getBytes(StandardCharsets.ISO_8859_1);
+        return ByteBuffer.wrap(bytes);
     }
 
-
+    private String ByteBufferToString(ByteBuffer buffer) throws UnsupportedEncodingException {
+        byte[] bytes;
+        bytes = buffer.array();
+        return new String(bytes, StandardCharsets.ISO_8859_1);
+    }
 }
