@@ -18,6 +18,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
+import reactor.core.publisher.Mono;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
@@ -114,8 +115,8 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
 
     @PostConstruct
     private void setup() {
-        given(kmsService.encrypt(any())).willAnswer(invocation -> "encrypted_" + invocation.getArgument(0));
-        given(kmsService.decrypt(any())).willAnswer(invocation -> "decrypted_" + invocation.getArgument(0));
+        given(kmsService.encrypt(any())).willAnswer(invocation -> Mono.just("encrypted_" + invocation.getArgument(0)));
+        given(kmsService.decrypt(any())).willAnswer(invocation -> Mono.just("decrypted_" + invocation.getArgument(0)));
 
     }
 

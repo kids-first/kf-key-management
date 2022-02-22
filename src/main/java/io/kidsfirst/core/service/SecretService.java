@@ -72,15 +72,14 @@ public class SecretService {
     public Mono<Secret> encryptAndSave(final Secret secret) {
         val secretValue = secret.getSecret();
         val encryptedValue = kmsService.encrypt(secretValue);
-
-        val encryptedSecret = new Secret(secret.getUserId(), secret.getService(), encryptedValue);
-
-        return Mono.fromFuture(secretDao.saveOrUpdateSecret(encryptedSecret));
+        return encryptedValue
+                .mapNotNull(s->new Secret(secret.getUserId(), secret.getService(), s))
+                .flatMap(s-> Mono.fromFuture(secretDao.saveOrUpdateSecret(s)));
     }
 
     public Mono<String> fetchAndDecrypt(final String userId, final String service) {
         val secret = getSecret(service, userId);
-        return secret.mapNotNull(s -> kmsService.decrypt(s.getSecret()));
+        return secret.mapNotNull(s -> s).flatMap(s -> kmsService.decrypt(s.getSecret()));
 
     }
 
