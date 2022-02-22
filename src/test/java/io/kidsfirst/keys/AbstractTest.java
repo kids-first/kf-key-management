@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -21,6 +22,7 @@ import java.util.function.Consumer;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
+@ActiveProfiles("dev")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @AutoConfigureWebTestClient(timeout = "5000")
@@ -73,22 +75,12 @@ public abstract class AbstractTest{
 
     @DynamicPropertySource
     static void setCavaticaUri(DynamicPropertyRegistry registry) {
-//        try {
-//            keycloak.execInContainer("/opt/jboss/keycloak/bin/add-user-keycloak.sh -u user -p user");
-//        } catch (Exception e) {
-//            throw new IllegalStateException(e);
-//        }
         registry.add("application.cavatica_root",
                 () -> cavaticaWM.baseUrl());
     }
 
     @DynamicPropertySource
     static void setGen3Uri(DynamicPropertyRegistry registry) {
-//        try {
-//            keycloak.execInContainer("/opt/jboss/keycloak/bin/add-user-keycloak.sh -u user -p user");
-//        } catch (Exception e) {
-//            throw new IllegalStateException(e);
-//        }
         registry.add("application.fence.gen3.token_endpoint",
                 () -> gen3VM.baseUrl());
     }

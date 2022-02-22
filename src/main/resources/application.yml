@@ -9,8 +9,13 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://127.0.0.1:18080/auth/realms/kf
-
+          issuer-uri: "__TBD__"
+  cloud:
+    gateway:
+      forwarded.enabled: false
+      x-forwarded.enabled: false
+      x-forwarded.forEnabled: false
+      x-forwarded.protoEnabled: false
 server:
   port: 8080
   compression:
@@ -27,16 +32,31 @@ application:
   secret_table: "kf-key-management-secret"
   fence:
     dcf:
+      name: "dcf"
       client_id: "Jue4ZBwbuqK87nYbEWldwED7CxER7CgDt2I8a87Q"
       client_secret: "__TBD__"
-      token_endpoint: "https://kf-key-manager.kidsfirstdrc.org/token?service=dcf"
+      proxy_uri: "/dcf"
+      token_endpoint: "https://nci-crdc-staging.datacommons.io/user/oauth2/token"
+      api_endpoint: "https://nci-crdc-staging.datacommons.io"
       redirect_uri: "https://portal.kidsfirstdrc.org/dcf_redirect/"
       scope: "openid"
     gen3:
+      name: "gen3"
       client_id: "V3TPPDDL2T180uPTGy0bZID114KPsd0jczi0DoxV"
       client_secret: "__TBD__"
-      token_endpoint: "https://kf-key-manager.kidsfirstdrc.org/token?service=gen3"
-      redirect_uri: "https://portal.kidsfirstdrc.org/gen3_redirect/"
+      token_endpoint: "https://gen3staging.kidsfirstdrc.org/user/oauth2/token"
+      redirect_uri: "https://portal-qa.includedcc.org/gen3_redirect/"
+      proxy_uri: "/gen3"
+      api_endpoint: "https://gen3staging.kidsfirstdrc.org"
+      scope: "openid"
+    cavatica:
+      name: "cavatica"
+      client_id: "0438b1968f28481785828c935d9f847a"
+      client_secret: "__TBD__"
+      token_endpoint: "https://accounts-drsko-dev-vayu.sbgenomics.com/oauth2/token"
+      api_endpoint: "https://api-drsko-dev-vayu.sbgenomics.com"
+      proxy_uri: "/cavatica2"
+      redirect_uri: "https://portal-qa.includedcc.org/cavatica_redirect/"
       scope: "openid"
   kms: "__KMS_KEY_TBD__"
 

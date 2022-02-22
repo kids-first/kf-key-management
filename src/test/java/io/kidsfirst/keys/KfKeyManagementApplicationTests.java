@@ -2,7 +2,6 @@ package io.kidsfirst.keys;
 
 import com.nimbusds.jose.shaded.json.JSONObject;
 import io.kidsfirst.core.model.Secret;
-import io.kidsfirst.core.service.KMSService;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -13,12 +12,10 @@ import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
-import reactor.core.publisher.Mono;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
@@ -28,24 +25,18 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder;
 
-import javax.annotation.PostConstruct;
 import java.net.URI;
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 
 @Slf4j
 public class KfKeyManagementApplicationTests extends AbstractTest {
 
     public static final String CLIENT_SECRET = "secret";
     public static final String REALM_NAME = "master";
-
-    @MockBean
-    private KMSService kmsService;
 
     private final String cavaticaURI = "/cavatica";
     private final String cavaticaResponseBody = "{" +
@@ -111,13 +102,6 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
         String accessToken = obtainAccessToken(username, password);
 
         return new UserIdAndToken(userId, accessToken);
-    }
-
-    @PostConstruct
-    private void setup() {
-        given(kmsService.encrypt(any())).willAnswer(invocation -> Mono.just("encrypted_" + invocation.getArgument(0)));
-        given(kmsService.decrypt(any())).willAnswer(invocation -> Mono.just("decrypted_" + invocation.getArgument(0)));
-
     }
 
     public static void createSecret(String service, String userId, String secret) {
@@ -343,7 +327,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
                 .expectStatus().isOk()
                 .expectBody().returnResult().getResponseBody();
         assert body != null;
-        assertThat(new String(body)).isEqualTo("decrypted_cavatica_secret");
+        assertThat(new String(body)).isEqualTo("cavatica_secret");
     }
 
     @Test
@@ -483,7 +467,7 @@ public class KfKeyManagementApplicationTests extends AbstractTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.access_token").value(o -> assertThat(o).isEqualTo("decrypted_this_is_access_token"));
+                .jsonPath("$.access_token").value(o -> assertThat(o).isEqualTo("this_is_access_token"));
 
     }
 

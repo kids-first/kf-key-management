@@ -7,6 +7,7 @@ import com.amazonaws.services.kms.model.EncryptRequest;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -17,12 +18,13 @@ import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Service
-public class KMSService {
+@Profile("!dev")
+public class AwsKmsService implements KmsService {
 
     private final String keyId;
     private final AWSKMS kms;
 
-    public KMSService(@Value("${application.kms}") String keyId) {
+    public AwsKmsService(@Value("${application.kms}") String keyId) {
         this.keyId = keyId;
         this.kms = AWSKMSAsyncClient.asyncBuilder().build();
     }

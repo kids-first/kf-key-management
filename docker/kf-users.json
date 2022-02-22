@@ -1,0 +1,32 @@
+[ {
+  "realm" : "kf",
+  "users" : [ {
+    "username" : "test",
+    "enabled" : true,
+    "credentials" : [ {
+      "type" : "password",
+      "value" : "test",
+      "temporary" : false
+    } ]
+  }, {
+    "username" : "test2",
+    "enabled" : true,
+    "credentials" : [ {
+      "type" : "password",
+      "value" : "test2",
+      "temporary" : false
+    } ]
+  } ]
+}, {
+  "realm" : "master",
+  "users" : [ {
+    "username" : "admin",
+    "enabled" : true,
+    "credentials" : [ {
+      "type" : "password",
+      "secretData" : "{\"value\":\"MgJkIgGvxvcO0fwYyE2uBSkic3COWS9M/6c7Oe2OAB3zdzIzjxqogmUtvXvmopV69U74UALeOATrEzTfZUIsNQ==\",\"salt\":\"Jz0ht6Iq2xoiM3HUNYriMA==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":100000,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "realmRoles" : [ "admin" ]
+  } ]
+} ]

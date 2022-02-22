@@ -1,8 +1,8 @@
 package io.kidsfirst.core.service;
 
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
+import io.kidsfirst.config.AllFences;
 import io.kidsfirst.core.dao.SecretDao;
-import io.kidsfirst.core.model.Provider;
 import io.kidsfirst.core.model.Secret;
 import lombok.val;
 import org.springframework.stereotype.Service;
@@ -15,9 +15,9 @@ import java.util.concurrent.CompletableFuture;
 public class SecretService {
 
     private final SecretDao secretDao;
-    private final KMSService kmsService;
+    private final KmsService kmsService;
 
-    public SecretService(SecretDao secretDao, KMSService kmsService) {
+    public SecretService(SecretDao secretDao, KmsService kmsService) {
         this.secretDao = secretDao;
         this.kmsService = kmsService;
     }
@@ -32,34 +32,34 @@ public class SecretService {
         return Mono.fromFuture(secretDao.deleteSecret(service, userId));
     }
 
-    public Mono<String> fetchAccessToken(final Provider fence, final String userId) {
+    public Mono<String> fetchAccessToken(final AllFences.Fence fence, final String userId) {
         return fetchAndDecrypt(userId, fence.keyAccessToken());
     }
 
-    public Mono<String> fetchRefreshToken(final Provider fence, final String userId) {
+    public Mono<String> fetchRefreshToken(final AllFences.Fence fence, final String userId) {
         return fetchAndDecrypt(userId, fence.keyRefreshToken());
     }
 
-    public Mono<Secret> persistAccessToken(final Provider fence, final String userId, final String token) {
+    public Mono<Secret> persistAccessToken(final AllFences.Fence fence, final String userId, final String token) {
         val secret = new Secret(userId, fence.keyAccessToken(), token);
         return encryptAndSave(secret);
     }
 
-    public Mono<Secret> persistRefreshToken(final Provider fence, final String userId, final String token) {
+    public Mono<Secret> persistRefreshToken(final AllFences.Fence fence, final String userId, final String token) {
         val secret = new Secret(userId, fence.keyRefreshToken(), token);
         return encryptAndSave(secret);
     }
 
-    public Mono<Secret> persistFenceUserId(final Provider fence, final String userId, final String token) {
+    public Mono<Secret> persistFenceUserId(final AllFences.Fence fence, final String userId, final String token) {
         val secret = new Secret(userId, fence.keyUserId(), token);
         return encryptAndSave(secret);
     }
 
-    public Flux<Secret> removeFenceTokens(final Provider fence, final String userId) {
+    public Flux<Secret> removeFenceTokens(final AllFences.Fence fence, final String userId) {
         return Flux.merge(deleteSecret(fence.keyAccessToken(), userId), deleteSecret(fence.keyRefreshToken(), userId), deleteSecret(fence.keyUserId(), userId));
     }
 
-    public Flux<Secret> persistTokens(final Provider fence, final String userId, final OIDCTokens tokens) {
+    public Flux<Secret> persistTokens(final AllFences.Fence fence, final String userId, final OIDCTokens tokens) {
         val fenceId = tokens.getIDTokenString();
         val accessToken = tokens.getAccessToken().getValue();
         val refreshToken = tokens.getRefreshToken().getValue();

@@ -1,5 +1,6 @@
 package io.kidsfirst.config;
 
+import io.kidsfirst.web.rest.FenceAuthFilterFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -16,7 +17,7 @@ public class WebConfiguration {
 
     private final Environment env;
 
-    public WebConfiguration(Environment env){
+    public WebConfiguration(Environment env) {
         this.env = env;
     }
 
@@ -41,12 +42,20 @@ public class WebConfiguration {
     }
 
     @Bean
-    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
-        return builder.routes()
-                .route("cavatic_route", r -> r.path("/cavatica2/**")
-                        .filters(f -> f.rewritePath("cavatica2", "v2"))
-                                .uri("https://cavatica-api.sbgenomics.com"))
-                .build();
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder, FenceAuthFilterFactory fenceAuthFilterFactory, AllFences fences) {
+        RouteLocatorBuilder.Builder routes = builder.routes();
+        fences.all().stream()
+                .filter(AllFences.Fence::hasApi).filter(AllFences.Fence::hasProxy)
+                .forEach(fence -> routes
+                        .route(fence.getName() + "_route",
+                                r -> r.path(  fence.getProxyUri() + "/**")
+                                        .filters(f ->
+                                                f.rewritePath(fence.getProxyUri() +"(?<segment>/?.*)", "$\\{segment}")
+                                                        .filter(fenceAuthFilterFactory.apply(new FenceAuthFilterFactory.Config(fence)))
+                                        ).uri(fence.getApiEndpoint())
+                        )
+                );
+        return routes.build();
     }
 
 }
