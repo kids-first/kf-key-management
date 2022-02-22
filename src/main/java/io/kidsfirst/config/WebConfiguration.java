@@ -43,7 +43,7 @@ public class WebConfiguration {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-                .route("cavatic_route", r -> r.path("/cavatica2/*")
+                .route("cavatic_route", r -> r.path("/cavatica2/**")
                         .filters(f -> f.rewritePath("cavatica2", "v2"))
                                 .uri("https://cavatica-api.sbgenomics.com"))
                 .build();
