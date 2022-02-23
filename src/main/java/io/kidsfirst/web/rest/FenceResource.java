@@ -48,16 +48,17 @@ public class FenceResource {
         val accessToken = secretService.fetchAccessToken(fence, userId);
         val refreshToken = secretService.fetchRefreshToken(fence, userId);
 
-         return accessToken
+        return accessToken
                 .zipWith(refreshToken)
                 .map(Tuple2::getT1)
                 .map(token -> {
 
-                        val body = new JSONObject();
-                        body.put("access_token", token);
-                        return ResponseEntity.ok(body);
+                    val body = new JSONObject();
+                    body.put("access_token", token);
+                    return ResponseEntity.ok(body);
 
                 })
+                .defaultIfEmpty(ResponseEntity.notFound().build())
                 .onErrorReturn(ResponseEntity.notFound().build());
 
     }
