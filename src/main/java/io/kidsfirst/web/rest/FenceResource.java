@@ -30,7 +30,7 @@ public class FenceResource {
         val isAuthenticated = secretService.fetchAccessToken(fence, userId).hasElement();
         return isAuthenticated.map(b -> {
             val body = new JSONObject();
-            body.put("authenticate", b);
+            body.put("authenticated", b);
             return ResponseEntity.ok(body);
         });
     }
