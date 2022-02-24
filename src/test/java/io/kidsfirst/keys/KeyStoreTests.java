@@ -79,7 +79,7 @@ public class KeyStoreTests extends AbstractTest {
                 .bodyValue(body.toJSONString())
                 .exchange()
                 .expectStatus().isOk();
-        val secret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "cavatica", null)).get();
+        val secret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "cavatica", null, null)).get();
         assertThat(secret).isNull();
     }
 
@@ -101,7 +101,7 @@ public class KeyStoreTests extends AbstractTest {
                 .expectStatus().isOk()
                 .expectBody();
 
-        val secret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "cavatica", null)).get();
+        val secret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "cavatica", null, null)).get();
         assertThat(secret).isNotNull();
         assertThat(secret.getSecret()).isEqualTo("encrypted_" + my_secret);
     }

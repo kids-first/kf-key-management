@@ -32,6 +32,9 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder;
 
 import java.net.URI;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.function.Consumer;
@@ -112,9 +115,13 @@ public abstract class AbstractTest {
     }
 
     public static void createSecret(String service, String userId, String secret) {
-        dynamoClient.table("kf-key-management-secret", TableSchema.fromBean(Secret.class)).putItem(new Secret(userId, service, secret));
+        val expiration = Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond();
+        createSecret(service,userId,secret, expiration);
     }
+    public static void createSecret(String service, String userId, String secret, Long expiration) {
+        dynamoClient.table("kf-key-management-secret", TableSchema.fromBean(Secret.class)).putItem(new Secret(userId, service, secret, expiration));
 
+    }
     public static String createKeycloakUser(String username, String password, String email, String firstName, String lastName) {
         UserRepresentation user = new UserRepresentation();
         user.setEnabled(true);

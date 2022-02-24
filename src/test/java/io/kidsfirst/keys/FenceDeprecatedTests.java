@@ -122,11 +122,11 @@ public class FenceDeprecatedTests extends AbstractTest {
                 .jsonPath("$.access_token").value(o -> assertThat(o).isEqualTo("this_is_access_token"))
                 .jsonPath("$.refresh_token").value(o -> assertThat(o).isEqualTo("this_is_refresh_token"));
 
-        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null)).get();
+        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
         assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_access_token");
 
-        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null)).get();
+        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
         assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_refresh_token");
 
@@ -158,10 +158,10 @@ public class FenceDeprecatedTests extends AbstractTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
                 .exchange().expectStatus().isOk();
-        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null)).get();
+        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNull();
 
-        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null)).get();
+        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNull();
 
 
@@ -211,11 +211,11 @@ public class FenceDeprecatedTests extends AbstractTest {
                 .jsonPath("$.access_token").value(o -> assertThat(o).isEqualTo("this_is_access_token"))
                 .jsonPath("$.refresh_token").value(o -> assertThat(o).isEqualTo("this_is_refresh_token"));
 
-        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null)).get();
+        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
         assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_access_token");
 
-        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null)).get();
+        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
         assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_refresh_token");
 

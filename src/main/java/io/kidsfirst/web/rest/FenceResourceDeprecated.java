@@ -68,16 +68,13 @@ public class FenceResourceDeprecated {
         val storedRefresh = secretService.fetchRefreshToken(fence, userId);
         return storedRefresh
                 .flatMap(refresh -> fenceService.refreshTokens(refresh, fence))
-                .flatMap(tokens -> Mono.from(Flux.merge(
-                                secretService.persistAccessToken(fence, userId, tokens.getAccessToken().getValue()),
-                                secretService.persistRefreshToken(fence, userId, tokens.getRefreshToken().getValue())
-                        ).map(a -> {
+                .flatMap(tokens -> Mono.from(secretService.persistTokens(fence, userId, tokens)).map(a -> {
                             val body = new JSONObject();
                             body.put("access_token", tokens.getAccessToken().getValue());
                             body.put("refresh_token", tokens.getRefreshToken().getValue());
                             return ResponseEntity.ok().body(body);
                         })
-                )).defaultIfEmpty(ResponseEntity.notFound().build());
+                ).defaultIfEmpty(ResponseEntity.notFound().build());
 
     }
 

@@ -100,11 +100,11 @@ public class FenceTests extends AbstractTest {
                 .expectStatus().isOk();
 
 
-        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null)).get();
+        val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
         assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_access_token");
 
-        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null)).get();
+        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
         assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_refresh_token");
 

@@ -26,8 +26,8 @@ public class FenceService {
         this.fences = fences;
     }
 
-    public Mono<Tokens> refreshTokens(String refreshToken, AllFences.Fence fence)  {
-        Mono<Optional<Tokens>> blockingWrapper = Mono.fromCallable(() -> {
+    public Mono<OIDCTokens> refreshTokens(String refreshToken, AllFences.Fence fence)  {
+        Mono<Optional<OIDCTokens>> blockingWrapper = Mono.fromCallable(() -> {
             val clientId = fence.getClientId();
             val clientSecret = fence.getClientSecret();
             val fenceEndpoint = fence.getTokenEndpoint();

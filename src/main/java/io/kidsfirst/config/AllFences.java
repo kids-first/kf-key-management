@@ -37,7 +37,8 @@ public class AllFences {
         private String proxyUri;
         private String scope;
         private String name;
-
+        private Integer refreshTokenLifetime;
+        private Integer accessTokenLifetimeBuffer;
 
         public String getClientId() {
             return clientId;
@@ -121,6 +122,22 @@ public class AllFences {
 
         public void setProxyUri(String proxyUri) {
             this.proxyUri = proxyUri;
+        }
+
+        public Integer getRefreshTokenLifetime() {
+            return refreshTokenLifetime;
+        }
+
+        public void setRefreshTokenLifetime(Integer refreshTokenLifetime) {
+            this.refreshTokenLifetime = refreshTokenLifetime;
+        }
+
+        public Integer getAccessTokenLifetimeBuffer() {
+            return accessTokenLifetimeBuffer != null ? accessTokenLifetimeBuffer : 0;
+        }
+
+        public void setAccessTokenLifetimeBuffer(Integer accessTokenLifetimeBuffer) {
+            this.accessTokenLifetimeBuffer = accessTokenLifetimeBuffer;
         }
     }
 

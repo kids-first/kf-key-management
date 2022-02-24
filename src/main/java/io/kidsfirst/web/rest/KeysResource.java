@@ -37,7 +37,7 @@ public class KeysResource {
         val secretValue =  (String)body.get("secret");
 
         // === 2. Create a Secret to hold the data
-        val secret = new Secret(userId, service, secretValue);
+        val secret = new Secret(userId, service, secretValue, null);
 
         // === 3. Save to dynamo DB
         return secretService.encryptAndSave(secret).then();

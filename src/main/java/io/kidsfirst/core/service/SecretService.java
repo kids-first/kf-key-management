@@ -9,7 +9,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
+
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Service
 public class SecretService {
@@ -40,18 +43,18 @@ public class SecretService {
         return fetchAndDecrypt(userId, fence.keyRefreshToken());
     }
 
-    public Mono<Secret> persistAccessToken(final AllFences.Fence fence, final String userId, final String token) {
-        val secret = new Secret(userId, fence.keyAccessToken(), token);
+    public Mono<Secret> persistAccessToken(final AllFences.Fence fence, final String userId, final String token, Long expiration) {
+        val secret = new Secret(userId, fence.keyAccessToken(), token, expiration);
         return encryptAndSave(secret);
     }
 
-    public Mono<Secret> persistRefreshToken(final AllFences.Fence fence, final String userId, final String token) {
-        val secret = new Secret(userId, fence.keyRefreshToken(), token);
+    public Mono<Secret> persistRefreshToken(final AllFences.Fence fence, final String userId, final String token, Long expiration) {
+        val secret = new Secret(userId, fence.keyRefreshToken(), token, expiration);
         return encryptAndSave(secret);
     }
 
-    public Mono<Secret> persistFenceUserId(final AllFences.Fence fence, final String userId, final String token) {
-        val secret = new Secret(userId, fence.keyUserId(), token);
+    public Mono<Secret> persistFenceUserId(final AllFences.Fence fence, final String userId, final String token, Long expiration) {
+        val secret = new Secret(userId, fence.keyUserId(), token, expiration);
         return encryptAndSave(secret);
     }
 
@@ -64,22 +67,38 @@ public class SecretService {
         val accessToken = tokens.getAccessToken().getValue();
         val refreshToken = tokens.getRefreshToken().getValue();
 
-        return Flux.merge(persistFenceUserId(fence, userId, fenceId),
-                persistAccessToken(fence, userId, accessToken),
-                persistRefreshToken(fence, userId, refreshToken));
+        val accessTokenExpiration = Instant.now()
+                .plus(tokens.getAccessToken().getLifetime(), SECONDS)
+                .minus(fence.getAccessTokenLifetimeBuffer(), SECONDS)
+                .getEpochSecond();
+
+        val refreshTokenExpiration = Instant.now()
+                .plus(fence.getRefreshTokenLifetime(), SECONDS)
+                .getEpochSecond();
+
+        return Flux.merge(persistFenceUserId(fence, userId, fenceId, accessTokenExpiration),
+                persistAccessToken(fence, userId, accessToken, accessTokenExpiration),
+                persistRefreshToken(fence, userId, refreshToken, refreshTokenExpiration));
     }
 
     public Mono<Secret> encryptAndSave(final Secret secret) {
         val secretValue = secret.getSecret();
         val encryptedValue = kmsService.encrypt(secretValue);
         return encryptedValue
-                .mapNotNull(s->new Secret(secret.getUserId(), secret.getService(), s))
+                .mapNotNull(s->new Secret(secret.getUserId(), secret.getService(), s, secret.getExpiration()))
                 .flatMap(s-> Mono.fromFuture(secretDao.saveOrUpdateSecret(s)));
     }
 
     public Mono<String> fetchAndDecrypt(final String userId, final String service) {
         val secret = getSecret(service, userId);
         return secret.mapNotNull(s -> s).flatMap(s -> kmsService.decrypt(s.getSecret()));
+
+    }
+
+    public Mono<String> fetchAndDecryptNotExpired(final String userId, final String service) {
+        return getSecret(service, userId)
+                .filter(Secret::notExpired)
+                .flatMap(s -> kmsService.decrypt(s.getSecret()));
 
     }
 

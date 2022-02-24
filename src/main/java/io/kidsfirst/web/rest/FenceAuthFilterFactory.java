@@ -1,6 +1,8 @@
 package io.kidsfirst.web.rest;
 
 import io.kidsfirst.config.AllFences;
+import io.kidsfirst.core.model.Secret;
+import io.kidsfirst.core.service.FenceService;
 import io.kidsfirst.core.service.SecretService;
 import lombok.val;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -17,9 +19,11 @@ import java.util.Optional;
 public class FenceAuthFilterFactory extends AbstractGatewayFilterFactory<FenceAuthFilterFactory.Config> {
 
     private final SecretService secretService;
+    private final FenceService fenceService;
 
-    public FenceAuthFilterFactory(SecretService secretService) {
+    public FenceAuthFilterFactory(SecretService secretService, FenceService fenceService) {
         this.secretService = secretService;
+        this.fenceService = fenceService;
     }
 
     @Override
@@ -30,12 +34,11 @@ public class FenceAuthFilterFactory extends AbstractGatewayFilterFactory<FenceAu
                         .cast(JwtAuthenticationToken.class)
                         .flatMap(user -> {
                             val userId = user.getTokenAttributes().get("sub").toString();
-                            //TODO implement a function that will refresh the token automatically if expired
-                            return secretService.fetchAccessToken(config.fence, userId);
+                            return fetchAccessTokenAndRefreshIfNeeded(userId, config.fence);
                         })
                         .mapNotNull(token -> Optional.of(withBearerAuth(exchange, token)))
                         .defaultIfEmpty(Optional.empty())
-                        .flatMap(o -> o.map(chain::filter).orElse(Mono.defer( () -> unauthorized(exchange))));
+                        .flatMap(o -> o.map(chain::filter).orElse(Mono.defer(() -> unauthorized(exchange))));
     }
 
     private Mono<Void> unauthorized(ServerWebExchange exchange) {
@@ -56,5 +59,16 @@ public class FenceAuthFilterFactory extends AbstractGatewayFilterFactory<FenceAu
         public Config(AllFences.Fence fence) {
             this.fence = fence;
         }
+    }
+
+    public Mono<String> fetchAccessTokenAndRefreshIfNeeded(String userId, AllFences.Fence fence) {
+        return secretService.fetchAndDecryptNotExpired(userId, fence.keyAccessToken())
+                .switchIfEmpty(Mono.defer(() -> secretService
+                        .fetchAndDecryptNotExpired(userId, fence.keyRefreshToken())
+                        .flatMap(refresh -> fenceService.refreshTokens(refresh, fence))
+                        .flatMap(tokens -> Mono.from(secretService.persistTokens(fence, userId, tokens))
+                                .then(Mono.just(tokens.getAccessToken().getValue()))))
+                );
+
     }
 }

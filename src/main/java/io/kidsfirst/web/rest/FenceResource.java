@@ -1,6 +1,7 @@
 package io.kidsfirst.web.rest;
 
 import com.nimbusds.jose.shaded.json.JSONObject;
+import io.kidsfirst.core.model.Secret;
 import io.kidsfirst.core.service.FenceService;
 import io.kidsfirst.core.service.SecretService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,12 +28,16 @@ public class FenceResource {
     public Mono<ResponseEntity<JSONObject>> getAuthClient(@PathVariable("fence") String fenceKey, JwtAuthenticationToken authentication) throws IllegalArgumentException {
         val userId = authentication.getTokenAttributes().get("sub").toString();
         val fence = fenceService.getFence(fenceKey);
-        val isAuthenticated = secretService.fetchAccessToken(fence, userId).hasElement();
-        return isAuthenticated.map(b -> {
-            val body = new JSONObject();
-            body.put("authenticated", b);
-            return ResponseEntity.ok(body);
-        });
+        val defaultResponse = new JSONObject();
+        defaultResponse.put("authenticated", false);
+        return secretService.getSecret(fence.keyRefreshToken(), userId)
+                .filter(Secret::notExpired)
+                .map(b -> {
+                    val body = new JSONObject();
+                    body.put("authenticated", true);
+                    body.put("expiration", b.getExpiration());
+                    return ResponseEntity.ok(body);
+                }).defaultIfEmpty(ResponseEntity.ok(defaultResponse));
     }
 
     @GetMapping("/{fence}/info")
@@ -53,7 +58,15 @@ public class FenceResource {
         val userId = authentication.getTokenAttributes().get("sub").toString();
         val fence = fenceService.getFence(fenceKey);
         return fenceService.requestTokens(authCode, fence)
-                .flatMap(t -> secretService.persistTokens(fence, userId, t).then(Mono.just(ResponseEntity.ok(new JSONObject()))))
+                .flatMap(t -> secretService.persistTokens(fence, userId, t)
+                        .filter(s -> s.getService().equals(fence.keyRefreshToken()))
+                        .next()
+                        .map(s -> {
+                            val b = new JSONObject();
+                            b.put("expiration", s.getExpiration());
+                            return ResponseEntity.ok(b);
+                        })
+                )
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
