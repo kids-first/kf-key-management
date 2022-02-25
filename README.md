@@ -2,7 +2,7 @@
   <img src="docs/key_management.svg" alt="Kids First Key Management" width="660px">
 </p>
 
-# Kids First Key Management Lambdas
+# Kids First Key Management
 
 Springboot application for storing user api tokens from third party services.
 
@@ -10,25 +10,21 @@ Springboot application for storing user api tokens from third party services.
 
 To run install and run test: `mvn clean install`
 
-To run application on your computer, you need a DynamoDB running:
-- Execute `launch.sh` script in docker directory
-- Uncomment dynamodb host config in application.yml (be careful with yml, dynamodb needs to be a child of application !)
+To run application on your computer, you can use docker-compose:
 ```
-#  dynamodb:
-#    endpoint: "http://localhost:8000"
+❯ docker-compose up
 ```
 
-You also need a KMS or you can just mock this service if you don't need it for your test.
+Then you can start your application with spring profile `dev` 
+```
+❯ mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
 
-Also make sure, keycloak configuration is correct.
-```
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://127.0.0.1:18080/auth/realms/kf
-```
+Docker compose creates 3 accounts :
+- 1 for realm master : admin / admin
+- 2 for realm kf : test / test and test2 / test2
+
+You can then use Postman collection in the project. First you need to authenticate user using Authenticate request. Then you can use any request.
 
 ## Methods
 

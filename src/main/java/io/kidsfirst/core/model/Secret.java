@@ -6,10 +6,10 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.io.Serializable;
+import java.time.Instant;
 
 @DynamoDbBean
 public class Secret implements Serializable {
-
 
     private String userId;
 
@@ -17,13 +17,16 @@ public class Secret implements Serializable {
 
     private String secret;
 
+    private Long expiration;
+
     public Secret() {
     }
 
-    public Secret(String userId, String service, String secret) {
+    public Secret(String userId, String service, String secret, Long expiration) {
         this.userId = userId;
         this.service = service;
         this.secret = secret;
+        this.expiration = expiration;
     }
 
     @DynamoDbPartitionKey
@@ -31,6 +34,7 @@ public class Secret implements Serializable {
     public String getUserId() {
         return userId;
     }
+
     public void setUserId(String userId) {
         this.userId = userId;
     }
@@ -54,4 +58,16 @@ public class Secret implements Serializable {
         this.secret = secret;
     }
 
+    @DynamoDbAttribute("expiration")
+    public Long getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(Long expiration) {
+        this.expiration = expiration;
+    }
+
+    public boolean notExpired() {
+        return expiration != null && Instant.now().getEpochSecond() < expiration;
+    }
 }

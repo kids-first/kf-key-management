@@ -1,8 +1,5 @@
 # Test config
-aws:
-  region: us-east-1
-  accessKey: test
-  secretKey: test
+
 spring:
   application:
     name: "keys"
@@ -31,16 +28,24 @@ application:
   secret_table: "kf-key-management-secret"
   fence:
     gen3:
+      name: "gen3"
       client_id: "gen3_client_id"
       client_secret: "__TBD__"
       token_endpoint: "https://kf-key-manager.kidsfirstdrc.org/token?service=gen3"
       redirect_uri: "https://portal.kidsfirstdrc.org/gen3_redirect/"
+      proxy_uri: "/gen3"
+      api_endpoint: "https://gen3staging.kidsfirstdrc.org"
       scope: "openid"
+      access_token_lifetime_buffer: 30
+      refresh_token_lifetime: 43140 # 30 days - 1 minute
     dcf:
+      name: "dcf"
       client_id: "dcf_client_id"
       client_secret: "__TBD__"
       token_endpoint: "https://kf-key-manager.kidsfirstdrc.org/token?service=dcf"
       redirect_uri: "https://portal.kidsfirstdrc.org/dcf_redirect/"
       scope: "openid"
+      access_token_lifetime_buffer: 30
+      refresh_token_lifetime: 43140 # 30 days - 1 minute
   kms: "__KMS_KEY_TBD__"
 
