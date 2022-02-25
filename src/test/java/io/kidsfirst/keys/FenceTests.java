@@ -80,7 +80,7 @@ public class FenceTests extends AbstractTest {
                 .expectStatus().is2xxSuccessful()
                 .expectBody().jsonPath("$.scope").exists()
                 .json("{\"scope\":\"openid\",\"redirect_uri\":\"https://portal.kidsfirstdrc.org/gen3_redirect/\",\"client_id\":\"gen3_client_id\", \"proxy_uri\": \"/gen3\"}")
-                .jsonPath("$.token_uri", gen3VM.baseUrl());
+                .jsonPath("$.authorize_uri", "https://gen3staging.kidsfirstdrc.org/user/oauth2/authorize");
     }
 
 

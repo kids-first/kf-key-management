@@ -69,7 +69,7 @@ public class FenceResource {
         body.put("redirect_uri", fence.getRedirectUri());
         body.put("proxy_uri", fence.getProxyUri());
         body.put("scope", fence.getScope());
-        body.put("token_uri", fence.getTokenEndpoint());
+        body.put("authorize_uri", fence.getAuthorizeUri());
 
         return Mono.just(body);
     }
