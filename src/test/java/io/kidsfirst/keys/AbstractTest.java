@@ -104,14 +104,17 @@ public abstract class AbstractTest {
         return s -> MatcherAssert.assertThat(Arrays.asList(s.split(",")), Matchers.hasItems(others));
     }
 
-    protected static UserIdAndToken createUserAndSecretAndObtainAccessToken(String service, String secret) {
+    protected static UserIdAndToken createUserAndSecretAndObtainAccessToken(String service, String secret, Long expiration) {
         val username = RandomStringUtils.random(10, true, false);
         val password = RandomStringUtils.random(10, true, false);
         val userId = createKeycloakUser(username, password, "test" + username + "@test.org", RandomStringUtils.random(10, true, false), RandomStringUtils.random(10, true, false));
-        createSecret(service, userId, secret);
+        createSecret(service, userId, secret, expiration);
         String accessToken = obtainAccessToken(username, password);
 
         return new UserIdAndToken(userId, accessToken);
+    }
+    protected static UserIdAndToken createUserAndSecretAndObtainAccessToken(String service, String secret) {
+        return createUserAndSecretAndObtainAccessToken(service, secret, null);
     }
 
     public static void createSecret(String service, String userId, String secret) {
