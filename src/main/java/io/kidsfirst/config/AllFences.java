@@ -39,6 +39,7 @@ public class AllFences {
         private String name;
         private Integer refreshTokenLifetime;
         private Integer accessTokenLifetimeBuffer;
+        private String authorizeUri;
 
         public String getClientId() {
             return clientId;
@@ -138,6 +139,14 @@ public class AllFences {
 
         public void setAccessTokenLifetimeBuffer(Integer accessTokenLifetimeBuffer) {
             this.accessTokenLifetimeBuffer = accessTokenLifetimeBuffer;
+        }
+
+        public String getAuthorizeUri() {
+            return authorizeUri;
+        }
+
+        public void setAuthorizeUri(String authorizeUri) {
+            this.authorizeUri = authorizeUri;
         }
     }
 

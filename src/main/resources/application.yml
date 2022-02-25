@@ -39,6 +39,7 @@ application:
       token_endpoint: "https://nci-crdc-staging.datacommons.io/user/oauth2/token"
       api_endpoint: "https://nci-crdc-staging.datacommons.io"
       redirect_uri: "https://portal.kidsfirstdrc.org/dcf_redirect/"
+      authorize_uri: "https://nci-crdc-staging.datacommons.io/user/oauth2/authorize"
       scope: "openid"
       access_token_lifetime_buffer: 30
       refresh_token_lifetime: 43140 # 30 days - 1 minute
@@ -50,6 +51,7 @@ application:
       redirect_uri: "https://portal-qa.includedcc.org/gen3_redirect/"
       proxy_uri: "/gen3"
       api_endpoint: "https://gen3staging.kidsfirstdrc.org"
+      authorize_uri: "https://gen3staging.kidsfirstdrc.org/user/oauth2/authorize"
       scope: "openid"
       access_token_lifetime_buffer: 30
       refresh_token_lifetime: 43140 # 30 days - 1 minute
@@ -58,6 +60,7 @@ application:
       client_id: "0438b1968f28481785828c935d9f847a"
       client_secret: "__TBD__"
       token_endpoint: "https://accounts-drsko-dev-vayu.sbgenomics.com/oauth2/token"
+      authorize_uri: "https://accounts-drsko-dev-vayu.sbgenomics.com/oauth2/authorization"
       api_endpoint: "https://api-drsko-dev-vayu.sbgenomics.com"
       proxy_uri: "/cavatica2"
       redirect_uri: "https://portal-qa.includedcc.org/cavatica_redirect/"
