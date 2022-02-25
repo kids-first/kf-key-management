@@ -90,6 +90,7 @@ public class FenceTests extends AbstractTest {
         content.put("access_token", "this_is_access_token");
         content.put("refresh_token", "this_is_refresh_token");
         content.put("token_type", "BEARER");
+        content.put("expires_in", 1200);
         gen3VM.stubFor(post("/").willReturn(ok(content.toJSONString()).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
         webClient
                 .get()
@@ -100,16 +101,20 @@ public class FenceTests extends AbstractTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.expiration").exists()
+        ;
 
 
         val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
         assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_access_token");
+        assertThat(accessSecret.notExpired()).isTrue();
 
         val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
         assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_refresh_token");
+        assertThat(refreshSecret.notExpired()).isTrue();
 
     }
 
