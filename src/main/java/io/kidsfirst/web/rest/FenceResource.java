@@ -9,7 +9,10 @@ import lombok.val;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/fence")
@@ -30,12 +33,29 @@ public class FenceResource {
         val fence = fenceService.getFence(fenceKey);
         val defaultResponse = new JSONObject();
         defaultResponse.put("authenticated", false);
-        return secretService.getSecret(fence.keyRefreshToken(), userId)
-                .filter(Secret::notExpired)
-                .map(b -> {
+
+        Mono<Optional<Long>> refreshExpiration = secretService.getSecret(fence.keyRefreshToken(), userId)
+                .filter(Secret::notExpired).map(Secret::getExpiration).map(Optional::of).defaultIfEmpty(Optional.empty());
+
+        Mono<Optional<Long>> accessExpiration = secretService.getSecret(fence.keyAccessToken(), userId)
+                .filter(Secret::notExpired).map(Secret::getExpiration).map(Optional::of).defaultIfEmpty(Optional.empty());
+
+        Mono<Long> expiration = Mono.zip(refreshExpiration, accessExpiration).flatMap(t -> {
+            val refreshOpt = t.getT1();
+            val accessOpt = t.getT2();
+            if (refreshOpt.isPresent() && accessOpt.isPresent()) {
+                val exp = accessOpt.get().compareTo(refreshOpt.get()) > 0 ? accessOpt : refreshOpt;
+                return Mono.just(exp.get());
+            } else return refreshOpt
+                        .map(Mono::just)
+                        .orElseGet(() -> accessOpt.map(Mono::just).orElseGet(Mono::empty));
+        });
+
+        return expiration
+                .map(e -> {
                     val body = new JSONObject();
                     body.put("authenticated", true);
-                    body.put("expiration", b.getExpiration());
+                    body.put("expiration", e);
                     return ResponseEntity.ok(body);
                 }).defaultIfEmpty(ResponseEntity.ok(defaultResponse));
     }

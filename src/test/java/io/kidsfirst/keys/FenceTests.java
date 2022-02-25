@@ -12,9 +12,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import java.time.temporal.ChronoUnit;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static java.time.Instant.now;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @Slf4j
@@ -25,8 +28,9 @@ public class FenceTests extends AbstractTest {
     private final String fenceExchangeUri = "/fence/gen3/exchange";
 
     protected static String defaultAccessToken = "";
+
     @BeforeAll
-    private static void initTest(){
+    private static void initTest() {
         val userAndToken = createUserAndSecretAndObtainAccessToken("gen3", "cavatica_secret");
         defaultAccessToken = userAndToken.getAccessToken();
     }
@@ -79,7 +83,6 @@ public class FenceTests extends AbstractTest {
     }
 
 
-
     @Test
     void testFenceTokenExchange() throws Exception {
         val userIdAndToken = createUserAndSecretAndObtainAccessToken("other", "this_is_access_token");
@@ -111,8 +114,9 @@ public class FenceTests extends AbstractTest {
     }
 
     @Test
-    void testFenceAuthenticated() {
-        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token");
+    void testFenceAuthenticatedWithRefreshTokenValidOnly() {
+        val expiration = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_refresh", "this_is_refresh_token", expiration);
 
         webClient
                 .get()
@@ -123,10 +127,163 @@ public class FenceTests extends AbstractTest {
                 .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody().jsonPath("$.authenticated").value(s->assertThat(s).isEqualTo(true));
-
+                .expectBody().jsonPath("$.authenticated").isEqualTo(true)
+                .jsonPath("$.expiration").isEqualTo(expiration);
 
     }
+
+    @Test
+    void testFenceAuthenticatedWithRefreshTokenExpiredOnly() {
+        val expiration = now().minus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_refresh", "this_is_refresh_token", expiration);
+
+        webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceAuthenticatedUri)
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.authenticated").isEqualTo(false);
+
+    }
+
+    @Test
+    void testFenceAuthenticatedWithAccessTokenValidOnly() {
+        val expiration = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token", expiration);
+
+        webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceAuthenticatedUri)
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.authenticated").isEqualTo(true)
+                .jsonPath("$.expiration").isEqualTo(expiration);
+
+    }
+
+
+    @Test
+    void testFenceAuthenticatedWithAccessTokenExpiredOnly() {
+        val expiration = now().minus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token", expiration);
+
+        webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceAuthenticatedUri)
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.authenticated").isEqualTo(false);
+
+    }
+
+    @Test
+    void testFenceAuthenticatedWithBothTokenExpired() {
+        val expiration = now().minus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token", expiration);
+        createSecret("fence_gen3_access", userIdAndToken.getUserId(), "this_is_access_token", expiration);
+
+        webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceAuthenticatedUri)
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.authenticated").isEqualTo(false);
+
+    }
+
+    @Test
+    void testFenceAuthenticatedWithBothTokenButAccessExpired() {
+        val expirationRefresh = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_refresh", "this_is_refresh_token", expirationRefresh);
+        val expirationAccess = now().minus(10, ChronoUnit.SECONDS).getEpochSecond();
+        createSecret("fence_gen3_access", userIdAndToken.getUserId(), "this_is_access_token", expirationAccess);
+
+        webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceAuthenticatedUri)
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.authenticated").isEqualTo(true)
+                .jsonPath("$.expiration").isEqualTo(expirationRefresh);
+    }
+
+    @Test
+    void testFenceAuthenticatedWithBothTokenButRefreshExpired() {
+        val expirationRefresh = now().minus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_refresh", "this_is_refresh_token", expirationRefresh);
+        val expirationAccess = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        createSecret("fence_gen3_access", userIdAndToken.getUserId(), "this_is_access_token", expirationAccess);
+        webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceAuthenticatedUri)
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.authenticated").isEqualTo(true)
+                .jsonPath("$.expiration").isEqualTo(expirationAccess);
+    }
+
+    @Test
+    void testFenceAuthenticatedWithBothTokenButRefreshExpireAfterAccess() {
+        val expirationRefresh = now().plus(30, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_refresh", "this_is_refresh_token", expirationRefresh);
+        val expirationAccess = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        createSecret("fence_gen3_access", userIdAndToken.getUserId(), "this_is_access_token", expirationAccess);
+        webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceAuthenticatedUri)
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.authenticated").isEqualTo(true)
+                .jsonPath("$.expiration").isEqualTo(expirationRefresh);
+    }
+
+    @Test
+    void testFenceAuthenticatedWithBothTokenButAccessExpireAfterRefresh() {
+        val expirationRefresh = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_refresh", "this_is_refresh_token", expirationRefresh);
+        val expirationAccess = now().plus(30, ChronoUnit.SECONDS).getEpochSecond();
+        createSecret("fence_gen3_access", userIdAndToken.getUserId(), "this_is_access_token", expirationAccess);
+        webClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(fenceAuthenticatedUri)
+                        .build())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.authenticated").isEqualTo(true)
+                .jsonPath("$.expiration").isEqualTo(expirationAccess);
+    }
+
     @Test
     void testFenceAuthenticatedNotConnected() {
         val userIdAndToken = createUserAndSecretAndObtainAccessToken("other", "this_is_access_token");
@@ -140,7 +297,7 @@ public class FenceTests extends AbstractTest {
                 .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody().jsonPath("$.authenticated").value(s->assertThat(s).isEqualTo(false));
+                .expectBody().jsonPath("$.authenticated").value(s -> assertThat(s).isEqualTo(false));
 
     }
 
