@@ -42,7 +42,7 @@ application:
       authorize_uri: "https://nci-crdc-staging.datacommons.io/user/oauth2/authorize"
       scope: "openid"
       access_token_lifetime_buffer: 30
-      refresh_token_lifetime: 43140 # 30 days - 1 minute
+      refresh_token_lifetime: 2591940 # 30 days - 1 minute
     gen3:
       name: "gen3"
       client_id: "V3TPPDDL2T180uPTGy0bZID114KPsd0jczi0DoxV"
@@ -54,7 +54,7 @@ application:
       authorize_uri: "https://gen3staging.kidsfirstdrc.org/user/oauth2/authorize"
       scope: "openid"
       access_token_lifetime_buffer: 30
-      refresh_token_lifetime: 43140 # 30 days - 1 minute
+      refresh_token_lifetime: 2591940 # 30 days - 1 minute
     cavatica:
       name: "cavatica"
       client_id: "0438b1968f28481785828c935d9f847a"
@@ -65,7 +65,7 @@ application:
       proxy_uri: "/cavatica2"
       redirect_uri: "https://portal-qa.includedcc.org/cavatica_redirect/"
       access_token_lifetime_buffer: 30
-      refresh_token_lifetime: 43140 # 30 days - 1 minute
+      refresh_token_lifetime: 2591940 # 30 days - 1 minute
       scope: "openid"
   kms: "__KMS_KEY_TBD__"
 
