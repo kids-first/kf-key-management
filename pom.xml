@@ -74,6 +74,13 @@
             <version>1.12.162</version>
         </dependency>
 
+        <!-- Ractor lock, use for managing concurrent refresh of fence -->
+        <dependency>
+            <groupId>com.github.alex-pumpkin</groupId>
+            <artifactId>reactor-lock-core</artifactId>
+            <version>0.2.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
