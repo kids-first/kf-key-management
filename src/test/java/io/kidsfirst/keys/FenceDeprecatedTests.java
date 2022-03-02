@@ -12,11 +12,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutionException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static java.time.Instant.now;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @Slf4j
@@ -101,10 +103,11 @@ public class FenceDeprecatedTests extends AbstractTest {
 
     @Test
     void testFenceRefreshPOST() throws Exception {
-        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_refresh", "secret");
+        val expirationRefresh = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_refresh", "secret", expirationRefresh);
         JSONObject content = new JSONObject();
         content.put("access_token", "this_is_access_token");
-        content.put("refresh_token", "this_is_refresh_token");
+        content.put("refresh_token", "this_is_a_fresh_refresh_token");
         content.put("token_type", "BEARER");
         gen3VM.stubFor(post("/").willReturn(ok(content.toJSONString()).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
         webClient
@@ -120,7 +123,7 @@ public class FenceDeprecatedTests extends AbstractTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.access_token").value(o -> assertThat(o).isEqualTo("this_is_access_token"))
-                .jsonPath("$.refresh_token").value(o -> assertThat(o).isEqualTo("this_is_refresh_token"));
+                .jsonPath("$.refresh_token").value(o -> assertThat(o).isEqualTo("this_is_a_fresh_refresh_token"));
 
         val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
@@ -128,7 +131,8 @@ public class FenceDeprecatedTests extends AbstractTest {
 
         val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
-        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_refresh_token");
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_refresh_token");
+        assertThat(refreshSecret.getExpiration()).isEqualTo(expirationRefresh);
 
     }
 
