@@ -68,18 +68,20 @@ public class FenceResourceDeprecated {
         val storedRefresh = secretService.fetchRefreshToken(fence, userId);
         return storedRefresh
                 .flatMap(refresh -> fenceService.refreshTokens(refresh, fence))
-                .flatMap(tokens -> Mono.from(secretService.persistTokens(fence, userId, tokens)).map(a -> {
+                .flatMap(tokens -> {
                             val body = new JSONObject();
                             body.put("access_token", tokens.getAccessToken().getValue());
                             body.put("refresh_token", tokens.getRefreshToken().getValue());
-                            return ResponseEntity.ok().body(body);
-                        })
+                            return secretService.persistTokens(fence, userId, tokens)
+                                    .then(Mono.just(ResponseEntity.ok().body(body)));
+                        }
                 ).defaultIfEmpty(ResponseEntity.notFound().build());
-
     }
 
+
     @PostMapping("/token")
-    public Mono<ResponseEntity<JSONObject>> requestTokens(@RequestParam("code") String authCode, @RequestParam("fence") String fenceKey, JwtAuthenticationToken authentication) {
+    public Mono<ResponseEntity<JSONObject>> requestTokens(@RequestParam("code") String
+                                                                  authCode, @RequestParam("fence") String fenceKey, JwtAuthenticationToken authentication) {
         val userId = authentication.getTokenAttributes().get("sub").toString();
         val fence = fenceService.getFence(fenceKey);
         return fenceService.requestTokens(authCode, fence)
@@ -95,7 +97,8 @@ public class FenceResourceDeprecated {
     }
 
     @DeleteMapping("/token")
-    public Mono<ResponseEntity<Object>> deleteToken(@RequestParam("fence") String fenceKey, JwtAuthenticationToken authentication) {
+    public Mono<ResponseEntity<Object>> deleteToken(@RequestParam("fence") String fenceKey, JwtAuthenticationToken
+            authentication) {
         val userId = authentication.getTokenAttributes().get("sub").toString();
         val fence = fenceService.getFence(fenceKey);
         return secretService.removeFenceTokens(fence, userId).then(Mono.just(ResponseEntity.ok().build()));
