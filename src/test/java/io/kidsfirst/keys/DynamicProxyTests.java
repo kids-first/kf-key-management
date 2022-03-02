@@ -23,10 +23,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Slf4j
 public class DynamicProxyTests extends AbstractTest {
 
-    private final String fenceAuthClientUri = "/fence/gen3/info";
-    private final String fenceAuthenticatedUri = "/fence/gen3/authenticated";
-    private final String fenceExchangeUri = "/fence/gen3/exchange";
-
     protected static String defaultAccessToken = "";
 
     @BeforeAll
@@ -148,7 +144,7 @@ public class DynamicProxyTests extends AbstractTest {
 
         JSONObject refreshContent = new JSONObject();
         refreshContent.put("access_token", "this_is_a_fresh_access_token");
-        refreshContent.put("refresh_token", "this_is_refresh_token");
+        refreshContent.put("refresh_token", "this_is_a_fresh_refresh_token");
         refreshContent.put("token_type", "BEARER");
         refreshContent.put("expires_in", 1200);
         gen3VM.stubFor(post("/").willReturn(ok(refreshContent.toJSONString()).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
@@ -172,6 +168,12 @@ public class DynamicProxyTests extends AbstractTest {
         assertThat(accessSecret).isNotNull();
         assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_access_token");
         assertThat(accessSecret.notExpired()).isTrue();
+
+        //Verify than refresh token has been refreshed, except for expiration date
+        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
+        assertThat(refreshSecret).isNotNull();
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_refresh_token");
+        assertThat(refreshSecret.getExpiration()).isEqualTo(expirationRefresh);
 
     }
 
@@ -182,7 +184,7 @@ public class DynamicProxyTests extends AbstractTest {
 
         JSONObject refreshContent = new JSONObject();
         refreshContent.put("access_token", "this_is_a_fresh_access_token");
-        refreshContent.put("refresh_token", "this_is_refresh_token");
+        refreshContent.put("refresh_token", "this_is_a_fresh_refresh_token");
         refreshContent.put("token_type", "BEARER");
         refreshContent.put("expires_in", 1200);
         gen3VM.stubFor(post("/").willReturn(ok(refreshContent.toJSONString()).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
@@ -207,6 +209,11 @@ public class DynamicProxyTests extends AbstractTest {
         assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_access_token");
         assertThat(accessSecret.notExpired()).isTrue();
 
+        //Verify than refresh token has been refreshed, except for expiration date
+        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
+        assertThat(refreshSecret).isNotNull();
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_refresh_token");
+        assertThat(refreshSecret.getExpiration()).isEqualTo(expirationRefresh);
     }
 
     @Test
@@ -217,7 +224,7 @@ public class DynamicProxyTests extends AbstractTest {
 
         JSONObject refreshContent = new JSONObject();
         refreshContent.put("access_token", "this_is_a_fresh_access_token");
-        refreshContent.put("refresh_token", "this_is_refresh_token");
+        refreshContent.put("refresh_token", "this_is_a_fresh_refresh_token");
         refreshContent.put("token_type", "BEARER");
         refreshContent.put("expires_in", 1200);
         gen3VM.stubFor(post("/").willReturn(ok(refreshContent.toJSONString()).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
@@ -242,10 +249,15 @@ public class DynamicProxyTests extends AbstractTest {
         assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_access_token");
         assertThat(accessSecret.notExpired()).isTrue();
 
+        //Verify than refresh token has been refreshed, except for expiration date
+        val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
+        assertThat(refreshSecret).isNotNull();
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_refresh_token");
+        assertThat(refreshSecret.getExpiration()).isEqualTo(expirationRefresh);
     }
 
     @Test
-    void testProxyWithoutAcessToken() {
+    void testProxyWithoutAccessToken() {
         val userIdAndToken = createUserAndSecretAndObtainAccessToken("OTHER", "this_is_access_token");
         JSONObject content = new JSONObject();
         content.put("user_id", "119");

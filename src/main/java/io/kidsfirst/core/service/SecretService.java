@@ -49,8 +49,14 @@ public class SecretService {
     }
 
     public Mono<Secret> persistRefreshToken(final AllFences.Fence fence, final String userId, final String token, Long expiration) {
-        val secret = new Secret(userId, fence.keyRefreshToken(), token, expiration);
-        return encryptAndSave(secret);
+        //For refresh token, expiration date is set only the first time
+        val existingSecret = Mono.fromFuture(secretDao.getSecret(fence.keyRefreshToken(), userId));
+        return existingSecret.map(s -> s.getExpiration() != null ? s.getExpiration() : expiration).defaultIfEmpty(expiration)
+                .flatMap(exp -> {
+                    val secret = new Secret(userId, fence.keyRefreshToken(), token, exp);
+                    return encryptAndSave(secret);
+                });
+
     }
 
     public Mono<Secret> persistFenceUserId(final AllFences.Fence fence, final String userId, final String token, Long expiration) {
@@ -85,8 +91,8 @@ public class SecretService {
         val secretValue = secret.getSecret();
         val encryptedValue = kmsService.encrypt(secretValue);
         return encryptedValue
-                .mapNotNull(s->new Secret(secret.getUserId(), secret.getService(), s, secret.getExpiration()))
-                .flatMap(s-> Mono.fromFuture(secretDao.saveOrUpdateSecret(s)));
+                .mapNotNull(s -> new Secret(secret.getUserId(), secret.getService(), s, secret.getExpiration()))
+                .flatMap(s -> Mono.fromFuture(secretDao.saveOrUpdateSecret(s)));
     }
 
     public Mono<String> fetchAndDecrypt(final String userId, final String service) {

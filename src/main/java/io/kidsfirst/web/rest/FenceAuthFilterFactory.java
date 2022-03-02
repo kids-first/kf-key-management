@@ -1,9 +1,9 @@
 package io.kidsfirst.web.rest;
 
-import com.github.alexpumpkin.reactorlock.concurrency.LockMono;
 import io.kidsfirst.config.AllFences;
 import io.kidsfirst.core.service.FenceService;
 import io.kidsfirst.core.service.SecretService;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -12,15 +12,14 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 @Component
+@Slf4j
 public class FenceAuthFilterFactory extends AbstractGatewayFilterFactory<FenceAuthFilterFactory.Config> {
 
     private final SecretService secretService;
@@ -69,14 +68,16 @@ public class FenceAuthFilterFactory extends AbstractGatewayFilterFactory<FenceAu
 
     public Mono<String> fetchAccessTokenAndRefreshIfNeeded(String userId, AllFences.Fence fence) {
         String key = userId + "_" + fence.getName();
-        return LockMono.key(key).lock(
-                secretService.fetchAndDecryptNotExpired(userId, fence.keyAccessToken())
-                        .switchIfEmpty(Mono.defer(() -> secretService
-                                .fetchAndDecryptNotExpired(userId, fence.keyRefreshToken())
-                                .flatMap(refresh -> fenceService.refreshTokens(refresh, fence))
-                                .flatMap(tokens -> Mono.from(secretService.persistTokens(fence, userId, tokens))
-                                        .then(Mono.just(tokens.getAccessToken().getValue()))))
-                )
-        );
+        return secretService.fetchAndDecryptNotExpired(userId, fence.keyAccessToken())
+                .switchIfEmpty(Mono.defer(() -> {
+                            log.info("Refreshing fence " + key);
+                            return secretService
+                                    .fetchAndDecryptNotExpired(userId, fence.keyRefreshToken())
+                                    .flatMap(refresh -> fenceService.refreshTokens(refresh, fence))
+                                    .flatMap(tokens -> secretService.persistTokens(fence, userId, tokens)
+                                            .then(Mono.just(tokens.getAccessToken().getValue())));
+                        })
+                );
+
     }
 }
