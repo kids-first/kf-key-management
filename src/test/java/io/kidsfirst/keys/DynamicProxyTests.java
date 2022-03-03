@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import java.io.IOException;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutionException;
 
@@ -23,6 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Slf4j
 public class DynamicProxyTests extends AbstractTest {
 
+    public static final String fenceAclUri = "/fence/gen3/acl";
     protected static String defaultAccessToken = "";
 
     @BeforeAll
@@ -271,6 +273,83 @@ public class DynamicProxyTests extends AbstractTest {
                 .exchange()
                 .expectStatus().isUnauthorized();
 
+    }
+
+    @Test
+    void testFenceAcl() throws IOException {
+        val expiration = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token", expiration);
+        final String content = contentFromResource("/gen3_user.json");
+        gen3VM.stubFor(get("/user/user").willReturn(ok(content).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
+        webClient
+                .get()
+                .uri(fenceAclUri)
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().json("{\"acl\":[\"SD_7NQ9151J.c999\",\"SD_BHJXBDQK\",\"SD_BHJXBDQK.c1\",\"SD_NMVV8A1Y.c999\",\"drc_test\",\"phs001168.c4\"]}");
+
+    }
+
+    @Test
+    void testFenceAclWithEmptyAcl() throws IOException {
+        val expiration = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token", expiration);
+        final String content = contentFromResource("/gen3_user_with_empty_acl.json");
+        gen3VM.stubFor(get("/user/user").willReturn(ok(content).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
+        webClient
+                .get()
+                .uri(fenceAclUri)
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().json("{\"acl\":[]}");
+    }
+
+    @Test
+    void testFenceAclWithoutAcl() throws IOException {
+        val expiration = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token", expiration);
+        final String content = contentFromResource("/gen3_user_without_acl.json");
+        gen3VM.stubFor(get("/user/user").willReturn(ok(content).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
+        webClient
+                .get()
+                .uri(fenceAclUri)
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().json("{\"acl\":[]}");
+    }
+    @Test
+    void testFenceAclError() {
+        val expiration = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token", expiration);
+        gen3VM.stubFor(get("/user/user").willReturn(badRequest()));
+        webClient
+                .get()
+                .uri(fenceAclUri)
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void testFenceUserCavatica() {
+        val expiration = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_cavatica_access", "this_is_access_token", expiration);
+        gen3VM.stubFor(get("/user/user").willReturn(badRequest()));
+        webClient
+                .get()
+                .uri("/fence/cavatica/acl")
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().json("{\"acl\":[]}");
     }
 
 }

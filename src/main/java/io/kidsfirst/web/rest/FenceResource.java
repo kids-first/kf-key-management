@@ -79,7 +79,7 @@ public class FenceResource {
         val userId = authentication.getTokenAttributes().get("sub").toString();
         val fence = fenceService.getFence(fenceKey);
         return fenceService.requestTokens(authCode, fence)
-                .flatMap(t -> secretService.persistTokens(fence, userId, t)
+                .flatMap(t -> secretService.persistTokens(fence, userId, t, true)
                         .filter(s -> s.getService().equals(fence.keyRefreshToken()))
                         .next()
                         .map(s -> {

@@ -37,7 +37,7 @@ application:
       api_endpoint: "https://gen3staging.kidsfirstdrc.org"
       scope: "openid"
       access_token_lifetime_buffer: 30
-      refresh_token_lifetime: 43140 # 30 days - 1 minute
+      refresh_token_lifetime: 2591940 # 30 days - 1 minute
     dcf:
       name: "dcf"
       client_id: "dcf_client_id"
@@ -46,6 +46,18 @@ application:
       redirect_uri: "https://portal.kidsfirstdrc.org/dcf_redirect/"
       scope: "openid"
       access_token_lifetime_buffer: 30
-      refresh_token_lifetime: 43140 # 30 days - 1 minute
+      refresh_token_lifetime: 2591940 # 30 days - 1 minute
+    cavatica:
+      name: "cavatica"
+      client_id: "cavatica_client_id"
+      client_secret: "__TBD__"
+      token_endpoint: "https://accounts-drsko-dev-vayu.sbgenomics.com/oauth2/token"
+      authorize_uri: "https://accounts-drsko-dev-vayu.sbgenomics.com/oauth2/authorization"
+      api_endpoint: "https://api-drsko-dev-vayu.sbgenomics.com"
+      proxy_uri: "/cavatica2"
+      redirect_uri: "https://portal-qa.includedcc.org/cavatica_redirect/"
+      access_token_lifetime_buffer: 30
+      refresh_token_lifetime: 2591940 # 30 days - 1 minute
+      scope: "openid"
   kms: "__KMS_KEY_TBD__"
 

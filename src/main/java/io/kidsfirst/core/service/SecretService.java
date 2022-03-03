@@ -48,8 +48,12 @@ public class SecretService {
         return encryptAndSave(secret);
     }
 
-    public Mono<Secret> persistRefreshToken(final AllFences.Fence fence, final String userId, final String token, Long expiration) {
+    public Mono<Secret> persistRefreshToken(final AllFences.Fence fence, final String userId, final String token, Long expiration, boolean isNew) {
         //For refresh token, expiration date is set only the first time
+        if(isNew){
+            val secret = new Secret(userId, fence.keyRefreshToken(), token, expiration);
+            return encryptAndSave(secret);
+        }
         val existingSecret = Mono.fromFuture(secretDao.getSecret(fence.keyRefreshToken(), userId));
         return existingSecret.map(s -> s.getExpiration() != null ? s.getExpiration() : expiration).defaultIfEmpty(expiration)
                 .flatMap(exp -> {
@@ -69,6 +73,10 @@ public class SecretService {
     }
 
     public Flux<Secret> persistTokens(final AllFences.Fence fence, final String userId, final OIDCTokens tokens) {
+        return persistTokens(fence, userId, tokens, false);
+    }
+
+    public Flux<Secret> persistTokens(final AllFences.Fence fence, final String userId, final OIDCTokens tokens, boolean isNew) {
         val fenceId = tokens.getIDTokenString();
         val accessToken = tokens.getAccessToken().getValue();
         val refreshToken = tokens.getRefreshToken().getValue();
@@ -84,7 +92,7 @@ public class SecretService {
 
         return Flux.merge(persistFenceUserId(fence, userId, fenceId, accessTokenExpiration),
                 persistAccessToken(fence, userId, accessToken, accessTokenExpiration),
-                persistRefreshToken(fence, userId, refreshToken, refreshTokenExpiration));
+                persistRefreshToken(fence, userId, refreshToken, refreshTokenExpiration, isNew));
     }
 
     public Mono<Secret> encryptAndSave(final Secret secret) {
