@@ -1,0 +1,92 @@
+{
+  "authz": {
+    "/open": [
+      {
+        "method": "read-storage",
+        "service": "*"
+      }
+    ],
+    "/programs/SD_7NQ9151J.c999": [
+      {
+        "method": "read-storage",
+        "service": "*"
+      }
+    ],
+    "/programs/SD_BHJXBDQK": [
+      {
+        "method": "read-storage",
+        "service": "*"
+      }
+    ],
+    "/programs/SD_BHJXBDQK.c1": [
+      {
+        "method": "read-storage",
+        "service": "*"
+      }
+    ],
+    "/programs/SD_NMVV8A1Y.c999": [
+      {
+        "method": "read-storage",
+        "service": "*"
+      }
+    ],
+    "/programs/drc_test": [
+      {
+        "method": "read-storage",
+        "service": "*"
+      }
+    ],
+    "/programs/phs001168.c4": [
+      {
+        "method": "read-storage",
+        "service": "*"
+      }
+    ]
+  },
+  "azp": null,
+  "certificates_uploaded": [],
+  "display_name": "",
+  "email": "",
+  "groups": [],
+  "idp": "ras",
+  "is_admin": false,
+  "message": "",
+  "name": "COSJER",
+  "phone_number": "",
+  "preferred_username": "",
+  "primary_google_service_account": null,
+  "project_access": {
+    "SD_7NQ9151J.c999": [
+      "read-storage"
+    ],
+    "SD_BHJXBDQK": [
+      "read-storage"
+    ],
+    "SD_BHJXBDQK.c1": [
+      "read-storage"
+    ],
+    "SD_NMVV8A1Y.c999": [
+      "read-storage"
+    ],
+    "drc_test": [
+      "read-storage"
+    ],
+    "phs001168.c4": [
+      "read-storage"
+    ]
+  },
+  "resources": [
+    "/programs/phs001168.c4",
+    "/open",
+    "/programs/drc_test",
+    "/programs/SD_BHJXBDQK",
+    "/programs/SD_BHJXBDQK.c1",
+    "/programs/SD_NMVV8A1Y.c999",
+    "/programs/SD_7NQ9151J.c999"
+  ],
+  "resources_granted": [],
+  "role": "user",
+  "sub": "123",
+  "user_id": 123,
+  "username": "DOEJ"
+}

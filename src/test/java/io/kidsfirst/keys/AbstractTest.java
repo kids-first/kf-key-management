@@ -5,6 +5,7 @@ import io.kidsfirst.core.model.Secret;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import lombok.val;
+import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -31,7 +32,10 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -170,5 +174,10 @@ public abstract class AbstractTest {
 
     }
 
+    public String contentFromResource(String name) throws IOException {
+        InputStream resourceAsStream = this.getClass().getResourceAsStream(name);
+        assert resourceAsStream != null;
+        return IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+    }
 
 }
