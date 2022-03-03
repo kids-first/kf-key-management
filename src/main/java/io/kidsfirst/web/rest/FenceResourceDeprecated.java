@@ -90,7 +90,7 @@ public class FenceResourceDeprecated {
                     body.put("access_token", t.getAccessToken().getValue());
                     body.put("refresh_token", t.getRefreshToken().getValue());
                     val response = ResponseEntity.ok().body(body);
-                    return secretService.persistTokens(fence, userId, t).then(Mono.just(response));
+                    return secretService.persistTokens(fence, userId, t, true).then(Mono.just(response));
                 })
                 .defaultIfEmpty(ResponseEntity.notFound().build());
 

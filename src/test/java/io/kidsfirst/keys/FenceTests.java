@@ -86,10 +86,12 @@ public class FenceTests extends AbstractTest {
 
     @Test
     void testFenceTokenExchange() throws Exception {
-        val userIdAndToken = createUserAndSecretAndObtainAccessToken("other", "this_is_access_token");
+        val expiration = now().minus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token", expiration);
+        createUserAndSecretAndObtainAccessToken("fence_gen3_refresh", "this_is_refresh_token", expiration);
         JSONObject content = new JSONObject();
-        content.put("access_token", "this_is_access_token");
-        content.put("refresh_token", "this_is_refresh_token");
+        content.put("access_token", "this_is_fresh_access_token");
+        content.put("refresh_token", "this_is_fresh_refresh_token");
         content.put("token_type", "BEARER");
         content.put("expires_in", 1200);
         gen3VM.stubFor(post("/").willReturn(ok(content.toJSONString()).withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)));
@@ -109,13 +111,15 @@ public class FenceTests extends AbstractTest {
 
         val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
-        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_access_token");
+        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_fresh_access_token");
         assertThat(accessSecret.notExpired()).isTrue();
+        assertThat(accessSecret.getExpiration()).isGreaterThan(expiration);
 
         val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
-        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_refresh_token");
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_fresh_refresh_token");
         assertThat(refreshSecret.notExpired()).isTrue();
+        assertThat(refreshSecret.getExpiration()).isGreaterThan(expiration);
 
     }
 
