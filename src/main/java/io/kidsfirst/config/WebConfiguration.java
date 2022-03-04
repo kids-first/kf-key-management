@@ -1,6 +1,8 @@
 package io.kidsfirst.config;
 
 import io.kidsfirst.web.rest.FenceAuthFilterFactory;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -10,6 +12,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+
+import java.util.Iterator;
+
+import static io.kidsfirst.web.rest.FenceAclGatewaySpecUtil.filterAcl;
 
 @Slf4j
 @Configuration
@@ -45,17 +51,31 @@ public class WebConfiguration {
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder, FenceAuthFilterFactory fenceAuthFilterFactory, AllFences fences) {
         RouteLocatorBuilder.Builder routes = builder.routes();
         fences.all().stream()
-                .filter(AllFences.Fence::hasApi).filter(AllFences.Fence::hasProxy)
+                .filter(AllFences.Fence::hasApi)
+                .filter(AllFences.Fence::hasProxy)
                 .forEach(fence -> routes
                         .route(fence.getName() + "_route",
-                                r -> r.path(  fence.getProxyUri() + "/**")
+                                r -> r.path(fence.getProxyUri() + "/**")
                                         .filters(f ->
-                                                f.rewritePath(fence.getProxyUri() +"(?<segment>/?.*)", "$\\{segment}")
+                                                f.rewritePath(fence.getProxyUri() + "(?<segment>/?.*)", "$\\{segment}")
                                                         .filter(fenceAuthFilterFactory.apply(new FenceAuthFilterFactory.Config(fence)))
                                         ).uri(fence.getApiEndpoint())
                         )
+                        .route(fence.getName() + "_acl_route",
+                                r -> r.path("/fence/" + fence.getName() + "/acl")
+                                        .filters(
+                                                f -> filterAcl(
+                                                        f.filter(fenceAuthFilterFactory.apply(new FenceAuthFilterFactory.Config(fence))),
+                                                        fence
+                                                )
+                                        ).uri(fence.getApiEndpoint())
+
+                        )
+
                 );
+
         return routes.build();
     }
+
 
 }
