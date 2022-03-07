@@ -33,9 +33,10 @@ application:
       client_secret: "__TBD__"
       token_endpoint: "https://kf-key-manager.kidsfirstdrc.org/token?service=gen3"
       redirect_uri: "https://portal.kidsfirstdrc.org/gen3_redirect/"
+      authorize_uri: "https://gen3staging.kidsfirstdrc.org/user/oauth2/authorize?idp=ras"
       proxy_uri: "/gen3"
       api_endpoint: "https://gen3staging.kidsfirstdrc.org"
-      scope: "openid"
+      scope: "openid%20user"
       access_token_lifetime_buffer: 30
       refresh_token_lifetime: 2591940 # 30 days - 1 minute
     dcf:
@@ -43,6 +44,7 @@ application:
       client_id: "dcf_client_id"
       client_secret: "__TBD__"
       token_endpoint: "https://kf-key-manager.kidsfirstdrc.org/token?service=dcf"
+      authorize_uri: "https://nci-crdc-staging.datacommons.io/user/oauth2/authorize?idp=ras"
       redirect_uri: "https://portal.kidsfirstdrc.org/dcf_redirect/"
       scope: "openid"
       access_token_lifetime_buffer: 30
