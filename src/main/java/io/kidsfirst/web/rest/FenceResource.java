@@ -6,12 +6,15 @@ import io.kidsfirst.core.service.FenceService;
 import io.kidsfirst.core.service.SecretService;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.http.client.utils.URIBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.net.URISyntaxException;
 import java.util.Optional;
 
 @RestController
@@ -47,8 +50,8 @@ public class FenceResource {
                 val exp = accessOpt.get().compareTo(refreshOpt.get()) > 0 ? accessOpt : refreshOpt;
                 return Mono.just(exp.get());
             } else return refreshOpt
-                        .map(Mono::just)
-                        .orElseGet(() -> accessOpt.map(Mono::just).orElseGet(Mono::empty));
+                    .map(Mono::just)
+                    .orElseGet(() -> accessOpt.map(Mono::just).orElseGet(Mono::empty));
         });
 
         return expiration
@@ -69,7 +72,15 @@ public class FenceResource {
         body.put("redirect_uri", fence.getRedirectUri());
         body.put("proxy_uri", fence.getProxyUri());
         body.put("scope", fence.getScope());
-        body.put("authorize_uri", fence.getAuthorizeUri());
+
+        val fullAuthorizeUri = UriComponentsBuilder.fromHttpUrl(fence.getAuthorizeUri())
+                .queryParam("scope", fence.getScope().replace("%20", " ")) //Do not encode twice space character
+                .queryParam("client_id", fence.getClientId())
+                .queryParam("redirect_uri", fence.getRedirectUri())
+                .queryParam("response_type", "code")
+                .encode()
+                .build().toUriString();
+        body.put("authorize_uri", fullAuthorizeUri);
 
         return Mono.just(body);
     }

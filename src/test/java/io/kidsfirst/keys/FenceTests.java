@@ -66,7 +66,9 @@ public class FenceTests extends AbstractTest {
                 .exchange()
                 .expectStatus().is2xxSuccessful()
                 .expectBody().jsonPath("$.scope").exists()
-                .json("{\"scope\":\"openid\",\"redirect_uri\":\"https://portal.kidsfirstdrc.org/dcf_redirect/\",\"client_id\":\"dcf_client_id\"}");
+                .json("{\"scope\":\"openid\",\"redirect_uri\":\"https://portal.kidsfirstdrc.org/dcf_redirect/\",\"client_id\":\"dcf_client_id\"}")
+                .jsonPath("$.authorize_uri").isEqualTo("https://nci-crdc-staging.datacommons.io/user/oauth2/authorize?idp=ras&scope=openid&client_id=dcf_client_id&redirect_uri=https://portal.kidsfirstdrc.org/dcf_redirect/&response_type=code")
+        ;
 
     }
 
@@ -79,8 +81,8 @@ public class FenceTests extends AbstractTest {
                 .exchange()
                 .expectStatus().is2xxSuccessful()
                 .expectBody().jsonPath("$.scope").exists()
-                .json("{\"scope\":\"openid\",\"redirect_uri\":\"https://portal.kidsfirstdrc.org/gen3_redirect/\",\"client_id\":\"gen3_client_id\", \"proxy_uri\": \"/gen3\"}")
-                .jsonPath("$.authorize_uri", "https://gen3staging.kidsfirstdrc.org/user/oauth2/authorize");
+                .json("{\"scope\":\"openid%20user\",\"redirect_uri\":\"https://portal.kidsfirstdrc.org/gen3_redirect/\",\"client_id\":\"gen3_client_id\", \"proxy_uri\": \"/gen3\"}")
+                .jsonPath("$.authorize_uri").isEqualTo("https://gen3staging.kidsfirstdrc.org/user/oauth2/authorize?idp=ras&scope=openid%20user&client_id=gen3_client_id&redirect_uri=https://portal.kidsfirstdrc.org/gen3_redirect/&response_type=code");
     }
 
 
