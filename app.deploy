@@ -4,7 +4,7 @@ deploy {
     jenkinsfile_name = "app.deploy"
     environments = "qa,prd"
     projectName = "key-manager"
-
+    prd_cidr    = "0.0.0.0/0"
     internal_app = "false"
     docker_image_type = "debian"
     dependencies = "ecr"
