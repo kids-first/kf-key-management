@@ -24,14 +24,15 @@ public class CavaticaService {
 
     public CavaticaService(@Value("${application.cavatica_root}") String cavaticaRoot) {
         val httpClient = HttpClient.create()
+                .followRedirect(true)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
                 .responseTimeout(Duration.ofMillis(5000))
                 .doOnConnected(conn ->
                         conn.addHandlerLast(new ReadTimeoutHandler(10000, TimeUnit.MILLISECONDS))
                                 .addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS)));
-
         this.client = WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
+
                 .baseUrl(cavaticaRoot)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
