@@ -1,5 +1,8 @@
 # In order to override the following configurations :
 # java -jar keys.jar --spring.config.location=classpath:/application.yml,file:./application-prod.yml
+management:
+  endpoints:
+    enabled-by-default: false
 spring:
   application:
     name: "keys"
