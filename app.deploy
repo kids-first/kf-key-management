@@ -12,4 +12,5 @@ deploy {
     entrypoint_command = "java -jar /opt/kidsfirst/keys/keys.jar"
     container_port = "8080"
     health_check_path = "/status"
+    add_cloudfront = "1"
 }
