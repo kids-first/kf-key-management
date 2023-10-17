@@ -50,7 +50,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>oauth2-oidc-sdk</artifactId>
-            <version>9.27</version>
+            <version>10.7.1</version>
         </dependency>
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
@@ -71,7 +71,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-kms</artifactId>
-            <version>1.12.200</version>
+            <version>1.12.439</version>
         </dependency>
 
         <dependency>
