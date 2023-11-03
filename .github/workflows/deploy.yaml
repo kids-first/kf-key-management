@@ -1,0 +1,24 @@
+name: Pooled runners test
+
+on:
+  push:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+    sampleJob:
+        name: Use a small instance to ping metadata service
+        runs-on: d3b-linux-small # Label is the same for the whole d3b-center org
+        timeout-minutes: 15
+        steps:
+          - run: |
+                TOKEN=`curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -s -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/instance-id
+    largeSampleJob:
+      name: Use a large instance to ping metadata service
+      runs-on: d3b-linux-large # Label is the same for the whole d3b-center org
+      timeout-minutes: 15
+      steps:
+        - run: |
+              TOKEN=`curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -s -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/instance-id
