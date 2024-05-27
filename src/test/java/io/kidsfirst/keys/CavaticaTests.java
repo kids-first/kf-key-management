@@ -1,9 +1,9 @@
 package io.kidsfirst.keys;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;

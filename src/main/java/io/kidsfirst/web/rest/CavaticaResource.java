@@ -1,9 +1,9 @@
 package io.kidsfirst.web.rest;
 
-import com.nimbusds.jose.shaded.json.JSONObject;
 import io.kidsfirst.core.service.CavaticaService;
 import io.kidsfirst.core.service.SecretService;
 import lombok.val;
+import net.minidev.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

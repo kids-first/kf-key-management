@@ -1,9 +1,9 @@
 package io.kidsfirst.keys;
 
-import com.nimbusds.jose.shaded.json.JSONObject;
 import io.kidsfirst.core.model.Secret;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;

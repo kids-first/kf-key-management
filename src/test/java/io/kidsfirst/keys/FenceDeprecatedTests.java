@@ -1,10 +1,10 @@
 package io.kidsfirst.keys;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import io.kidsfirst.core.model.Secret;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -86,7 +86,7 @@ public class FenceDeprecatedTests extends AbstractTest {
                 .exchange()
                 .expectStatus().is2xxSuccessful()
                 .expectBody().jsonPath("$.scope").exists()
-                .json("{\"scope\":\"openid\",\"redirect_uri\":\"https://portal.kidsfirstdrc.org/gen3_redirect/\",\"client_id\":\"gen3_client_id\"}");
+                .json("{\"scope\":\"openid%20user\",\"redirect_uri\":\"https://portal.kidsfirstdrc.org/gen3_redirect/\",\"client_id\":\"gen3_client_id\"}");
     }
 
 
