@@ -1,20 +1,17 @@
 package io.kidsfirst.web.rest;
 
-import com.nimbusds.jose.shaded.json.JSONObject;
 import io.kidsfirst.core.model.Secret;
 import io.kidsfirst.core.service.FenceService;
 import io.kidsfirst.core.service.SecretService;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.apache.http.client.utils.URIBuilder;
+import net.minidev.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.net.URISyntaxException;
 import java.util.Optional;
 
 @RestController
