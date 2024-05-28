@@ -31,7 +31,7 @@ public class FenceDeprecatedTests extends AbstractTest {
 
     protected static String defaultAccessToken = "";
     @BeforeAll
-    private static void initTest(){
+    static void initTest(){
         val userAndToken = createUserAndSecretAndObtainAccessToken("cavatica", "cavatica_secret");
         defaultAccessToken = userAndToken.getAccessToken();
     }
