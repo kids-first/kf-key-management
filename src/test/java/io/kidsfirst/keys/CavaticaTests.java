@@ -11,9 +11,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+
 
 @Slf4j
 public class CavaticaTests extends AbstractTest {
@@ -46,7 +46,7 @@ public class CavaticaTests extends AbstractTest {
             "}";
 
     @BeforeAll
-    private static void initTest(){
+    static void initTest(){
         val userAndToken = createUserAndSecretAndObtainAccessToken("cavatica", "cavatica_secret");
         defaultAccessToken = userAndToken.getAccessToken();
     }
