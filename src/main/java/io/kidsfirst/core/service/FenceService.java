@@ -9,6 +9,8 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.kidsfirst.config.AllFences;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -51,9 +53,11 @@ public class FenceService {
                         .getOIDCTokens();
 
                 return Optional.of(tokens);
+            } else {
+                log.error("Error in token refresh {} - {} - {}", fence.getName(), fenceResponse.getStatusCode(), fenceResponse.getBody());
+                return Optional.empty();
             }
 
-            return Optional.empty();
         });
 
         return blockingWrapper.subscribeOn(Schedulers.boundedElastic()).flatMap(o -> o.map(Mono::just).orElseGet(Mono::empty));
@@ -91,7 +95,7 @@ public class FenceService {
 
             return Optional.of(tokens);
         } else {
-            log.error("Error in  {} fence response during request tokens: status={}, content={}", fence.getName(), fenceResponse.getStatusCode(), fenceResponse.getContent());
+            log.error("Error in token request {} - {} - {}", fence.getName(), fenceResponse.getStatusCode(), fenceResponse.getBody());
             return Optional.empty();
         }});
 
