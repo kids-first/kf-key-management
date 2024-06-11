@@ -9,8 +9,6 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.kidsfirst.config.AllFences;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
