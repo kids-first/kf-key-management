@@ -51,9 +51,11 @@ public class FenceService {
                         .getOIDCTokens();
 
                 return Optional.of(tokens);
+            } else {
+                log.error("Error in token refresh {} - {} - {}", fence.getName(), fenceResponse.getStatusCode(), fenceResponse.getBody());
+                return Optional.empty();
             }
 
-            return Optional.empty();
         });
 
         return blockingWrapper.subscribeOn(Schedulers.boundedElastic()).flatMap(o -> o.map(Mono::just).orElseGet(Mono::empty));
@@ -91,7 +93,7 @@ public class FenceService {
 
             return Optional.of(tokens);
         } else {
-            log.error("Error in  {} fence response during request tokens: status={}, content={}", fence.getName(), fenceResponse.getStatusCode(), fenceResponse.getContent());
+            log.error("Error in token request {} - {} - {}", fence.getName(), fenceResponse.getStatusCode(), fenceResponse.getBody());
             return Optional.empty();
         }});
 
