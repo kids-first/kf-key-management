@@ -2,6 +2,7 @@ package io.kidsfirst.core.service;
 
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSAsyncClient;
+import com.amazonaws.services.kms.model.AWSKMSException;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.EncryptRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,9 @@ public class AwsKmsService implements KmsService {
             } catch (UnsupportedEncodingException e) {
                 // Shouldn't be reachable, handle anyways
                 log.error(e.getMessage(), e);
+                return null;
+            } catch (AWSKMSException e) {
+                log.error("AWSKMSException occurs when encrypting [{}] with message {}", original, e.getMessage());
                 return null;
             }
         }).subscribeOn(Schedulers.boundedElastic());

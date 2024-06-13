@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kidsfirst.config.AllFences;
 import io.kidsfirst.core.model.Acl;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.cloud.gateway.route.builder.GatewayFilterSpec;
 import org.springframework.http.MediaType;
@@ -13,6 +14,7 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 import java.util.Objects;
 
+@Slf4j
 public class FenceAclGatewaySpecUtil {
 
     private final static ObjectMapper objectMapper = new ObjectMapper();
@@ -32,6 +34,8 @@ public class FenceAclGatewaySpecUtil {
                                     } catch (JsonProcessingException e) {
                                         throw new IllegalStateException("Impossible to parse json", e);
                                     }
+                                } else {
+                                    log.error("Error when retrieving ACLs for fence {} with status {}", fence.getName(), serverWebExchange.getResponse().getStatusCode());
                                 }
                                 return Mono.just(Objects.requireNonNullElse(s, ""));
                             }
