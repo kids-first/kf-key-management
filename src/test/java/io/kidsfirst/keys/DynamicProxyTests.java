@@ -168,13 +168,13 @@ public class DynamicProxyTests extends AbstractTest {
         //Verify than access token has been refreshed
         val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
-        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_access_token");
+        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_compressed_this_is_a_fresh_access_token");
         assertThat(accessSecret.notExpired()).isTrue();
 
         //Verify than refresh token has been refreshed, except for expiration date
         val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
-        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_refresh_token");
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_compressed_this_is_a_fresh_refresh_token");
         assertThat(refreshSecret.getExpiration()).isEqualTo(expirationRefresh);
 
     }
@@ -208,13 +208,13 @@ public class DynamicProxyTests extends AbstractTest {
         //Verify than access token has been refreshed
         val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
-        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_access_token");
+        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_compressed_this_is_a_fresh_access_token");
         assertThat(accessSecret.notExpired()).isTrue();
 
         //Verify than refresh token has been refreshed, except for expiration date
         val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
-        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_refresh_token");
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_compressed_this_is_a_fresh_refresh_token");
         assertThat(refreshSecret.getExpiration()).isEqualTo(expirationRefresh);
     }
 
@@ -248,13 +248,13 @@ public class DynamicProxyTests extends AbstractTest {
         //Verify than access token has been refreshed
         val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
-        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_access_token");
+        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_compressed_this_is_a_fresh_access_token");
         assertThat(accessSecret.notExpired()).isTrue();
 
         //Verify than refresh token has been refreshed, except for expiration date
         val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
-        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_refresh_token");
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_compressed_this_is_a_fresh_refresh_token");
         assertThat(refreshSecret.getExpiration()).isEqualTo(expirationRefresh);
     }
 

@@ -33,7 +33,7 @@ public class AwsKmsService implements KmsService {
     public Mono<String> encrypt(String original) {
         return Mono.fromCallable(() -> {
             try {
-                val bufferedOriginal = StringToByteBuffer(StringCompressService.compress(original));
+                val bufferedOriginal = StringToByteBuffer(original);
                 val encryptRequest = new EncryptRequest();
                 encryptRequest.withKeyId(keyId);
                 encryptRequest.setPlaintext(bufferedOriginal);
@@ -54,6 +54,12 @@ public class AwsKmsService implements KmsService {
 
     }
 
+    @Override
+    public Mono<String> compressAndEncrypt(String original) {
+        String compressedOriginal = StringCompressService.compress(original);
+        return encrypt(compressedOriginal);
+    }
+
     public Mono<String> decrypt(String cipher) {
         return Mono.fromCallable(() -> {
             try {
@@ -63,7 +69,7 @@ public class AwsKmsService implements KmsService {
 
                 val result = kms.decrypt(decryptRequest);
                 val bufferedOriginal = result.getPlaintext();
-                return StringCompressService.decompress(ByteBufferToString(bufferedOriginal));
+                return ByteBufferToString(bufferedOriginal);
 
             } catch (UnsupportedEncodingException e) {
                 // Shouldn't be reachable, handle anyway
@@ -72,6 +78,11 @@ public class AwsKmsService implements KmsService {
             }
         }).subscribeOn(Schedulers.boundedElastic());
 
+    }
+
+    @Override
+    public Mono<String> decryptAndDecompress(String cipher) {
+        return decrypt(cipher).map(StringCompressService::decompress);
     }
 
     private ByteBuffer StringToByteBuffer(String string) throws UnsupportedEncodingException {

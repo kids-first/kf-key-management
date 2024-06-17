@@ -127,11 +127,11 @@ public class FenceDeprecatedTests extends AbstractTest {
 
         val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
-        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_access_token");
+        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_compressed_this_is_access_token");
 
         val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
-        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_a_fresh_refresh_token");
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_compressed_this_is_a_fresh_refresh_token");
         assertThat(refreshSecret.getExpiration()).isEqualTo(expirationRefresh);
 
     }
@@ -220,12 +220,12 @@ public class FenceDeprecatedTests extends AbstractTest {
 
         val accessSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_access", null, null)).get();
         assertThat(accessSecret).isNotNull();
-        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_this_is_fresh_access_token");
+        assertThat(accessSecret.getSecret()).isEqualTo("encrypted_compressed_this_is_fresh_access_token");
         assertThat(accessSecret.getExpiration()).isGreaterThan(expiration);
 
         val refreshSecret = secretTable.getItem(new Secret(userIdAndToken.getUserId(), "fence_gen3_refresh", null, null)).get();
         assertThat(refreshSecret).isNotNull();
-        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_this_is_fresh_refresh_token");
+        assertThat(refreshSecret.getSecret()).isEqualTo("encrypted_compressed_this_is_fresh_refresh_token");
         assertThat(refreshSecret.getExpiration()).isGreaterThan(expiration);
 
 
