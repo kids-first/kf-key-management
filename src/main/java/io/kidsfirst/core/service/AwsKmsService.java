@@ -43,15 +43,21 @@ public class AwsKmsService implements KmsService {
                 return ByteBufferToString(bufferedCipher);
 
             } catch (UnsupportedEncodingException e) {
-                // Shouldn't be reachable, handle anyways
+                // Shouldn't be reachable, handle anyway
                 log.error(e.getMessage(), e);
                 return null;
             } catch (AWSKMSException e) {
-                log.error("AWSKMSException occurs when encrypting [{}] with message {}", original, e.getMessage());
+                log.error("AWSKMSException occurs when encrypting with message {}", e.getMessage());
                 return null;
             }
         }).subscribeOn(Schedulers.boundedElastic());
 
+    }
+
+    @Override
+    public Mono<String> compressAndEncrypt(String original) {
+        String compressedOriginal = StringCompressService.compress(original);
+        return encrypt(compressedOriginal);
     }
 
     public Mono<String> decrypt(String cipher) {
@@ -66,12 +72,17 @@ public class AwsKmsService implements KmsService {
                 return ByteBufferToString(bufferedOriginal);
 
             } catch (UnsupportedEncodingException e) {
-                // Shouldn't be reachable, handle anyways
+                // Shouldn't be reachable, handle anyway
                 log.error(e.getMessage(), e);
                 return null;
             }
         }).subscribeOn(Schedulers.boundedElastic());
 
+    }
+
+    @Override
+    public Mono<String> decryptAndDecompress(String cipher) {
+        return decrypt(cipher).map(StringCompressService::decompress);
     }
 
     private ByteBuffer StringToByteBuffer(String string) throws UnsupportedEncodingException {

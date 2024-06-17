@@ -36,29 +36,29 @@ public class SecretService {
     }
 
     public Mono<String> fetchAccessToken(final AllFences.Fence fence, final String userId) {
-        return fetchAndDecrypt(userId, fence.keyAccessToken());
+        return fetchDecryptAndDecompress(userId, fence.keyAccessToken());
     }
 
     public Mono<String> fetchRefreshToken(final AllFences.Fence fence, final String userId) {
-        return fetchAndDecrypt(userId, fence.keyRefreshToken());
+        return fetchDecryptAndDecompress(userId, fence.keyRefreshToken());
     }
 
     public Mono<Secret> persistAccessToken(final AllFences.Fence fence, final String userId, final String token, Long expiration) {
         val secret = new Secret(userId, fence.keyAccessToken(), token, expiration);
-        return encryptAndSave(secret);
+        return compressEncryptAndSave(secret);
     }
 
     public Mono<Secret> persistRefreshToken(final AllFences.Fence fence, final String userId, final String token, Long expiration, boolean isNew) {
         //For refresh token, expiration date is set only the first time
         if(isNew){
             val secret = new Secret(userId, fence.keyRefreshToken(), token, expiration);
-            return encryptAndSave(secret);
+            return compressEncryptAndSave(secret);
         }
         val existingSecret = Mono.fromFuture(secretDao.getSecret(fence.keyRefreshToken(), userId));
         return existingSecret.map(s -> s.getExpiration() != null ? s.getExpiration() : expiration).defaultIfEmpty(expiration)
                 .flatMap(exp -> {
                     val secret = new Secret(userId, fence.keyRefreshToken(), token, exp);
-                    return encryptAndSave(secret);
+                    return compressEncryptAndSave(secret);
                 });
 
     }
@@ -103,9 +103,23 @@ public class SecretService {
                 .flatMap(s -> Mono.fromFuture(secretDao.saveOrUpdateSecret(s)));
     }
 
+    public Mono<Secret> compressEncryptAndSave(final Secret secret) {
+        val secretValue = secret.getSecret();
+        val encryptedValue = kmsService.compressAndEncrypt(secretValue);
+        return encryptedValue
+                .mapNotNull(s -> new Secret(secret.getUserId(), secret.getService(), s, secret.getExpiration()))
+                .flatMap(s -> Mono.fromFuture(secretDao.saveOrUpdateSecret(s)));
+    }
+
     public Mono<String> fetchAndDecrypt(final String userId, final String service) {
         val secret = getSecret(service, userId);
         return secret.mapNotNull(s -> s).flatMap(s -> kmsService.decrypt(s.getSecret()));
+
+    }
+
+    public Mono<String> fetchDecryptAndDecompress(final String userId, final String service) {
+        val secret = getSecret(service, userId);
+        return secret.mapNotNull(s -> s).flatMap(s -> kmsService.decryptAndDecompress(s.getSecret()));
 
     }
 
