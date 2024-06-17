@@ -43,11 +43,11 @@ public class AwsKmsService implements KmsService {
                 return ByteBufferToString(bufferedCipher);
 
             } catch (UnsupportedEncodingException e) {
-                // Shouldn't be reachable, handle anyways
+                // Shouldn't be reachable, handle anyway
                 log.error(e.getMessage(), e);
                 return null;
             } catch (AWSKMSException e) {
-                log.error("AWSKMSException occurs when encrypting [{}] with message {}", original, e.getMessage());
+                log.error("AWSKMSException occurs when encrypting with message {}", e.getMessage());
                 return null;
             }
         }).subscribeOn(Schedulers.boundedElastic());
