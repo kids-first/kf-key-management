@@ -126,7 +126,7 @@ public class SecretService {
     public Mono<String> fetchAndDecryptNotExpired(final String userId, final String service) {
         return getSecret(service, userId)
                 .filter(Secret::notExpired)
-                .flatMap(s -> kmsService.decrypt(s.getSecret()));
+                .flatMap(s -> kmsService.decryptAndDecompress(s.getSecret()));
 
     }
 
