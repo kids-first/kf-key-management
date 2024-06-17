@@ -15,13 +15,13 @@ public class StringCompressService {
             return str;
         }
 
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            GZIPOutputStream gzip = new GZIPOutputStream(out);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        
+        try (GZIPOutputStream gzip = new GZIPOutputStream(out)) {
             gzip.write(str.getBytes());
             gzip.close();
             return out.toString(StandardCharsets.ISO_8859_1);
-        } catch(IOException e) {
+        } catch (IOException e) {
             log.error("Error during string compress", e);
             return str;
         }
@@ -32,12 +32,11 @@ public class StringCompressService {
             return str;
         }
 
-        try {
-            GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(str.getBytes(StandardCharsets.ISO_8859_1)));
-            BufferedReader bf = new BufferedReader(new InputStreamReader(gis, "ISO_8859_1"));
+        try(GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(str.getBytes(StandardCharsets.ISO_8859_1)));
+            BufferedReader bf = new BufferedReader(new InputStreamReader(gis, "ISO_8859_1"))) {
             StringBuilder outStr = new StringBuilder();
             String line;
-            while ((line=bf.readLine())!=null) {
+            while ((line = bf.readLine()) != null) {
                 outStr.append(line);
             }
             return outStr.toString();
