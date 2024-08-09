@@ -39,8 +39,8 @@ public class FenceAclGatewaySpecUtil {
                                 }
                                 return Mono.just(Objects.requireNonNullElse(s, ""));
                             }
+                    ).retry(2);
 
-                    );
         }
         return f.filters((exchange, chain) -> {
             try {
