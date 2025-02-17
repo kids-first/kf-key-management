@@ -114,6 +114,7 @@ JSON with the following fields.
 | `body`    | **JSON** OR **null**: (*Optional*) Provide the JSON request body. If no request body is required then use the value 'null' or omit this field |
 
 Example:
+
 ```$json
 {
 	"method":"GET",
