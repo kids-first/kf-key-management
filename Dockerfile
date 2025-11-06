@@ -1,11 +1,11 @@
-FROM openjdk:16-jdk-slim as build-keys
+FROM eclipse-temurin:17-jdk-alpine as build-keys
 
 WORKDIR /tmp/kf-key-management
 COPY . .
 
 RUN ./mvnw package -DskipTests
 
-FROM openjdk:16-jdk-slim
+FROM eclipse-temurin:17-jdk-alpine
 
 RUN mkdir -p /opt/kidsfirst/keys
 COPY --from=build-keys /tmp/kf-key-management/target/keys.jar /opt/kidsfirst/keys/keys.jar
