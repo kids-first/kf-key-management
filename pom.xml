@@ -21,9 +21,14 @@
         <testcontainers.version>1.21.4</testcontainers.version>
         <!-- Override Spring Boot 2.7 BOM defaults to the Jakarta EE 9 namespace
              (javax.* → jakarta.*) so testcontainers-keycloak 3.x's admin client
-             resolves jakarta.ws.rs.core.Response. -->
+             and its transitive RestEasy provider chain resolve jakarta.ws.rs.* /
+             jakarta.xml.bind.* / jakarta.activation.* / jakarta.mail.* /
+             jakarta.annotation.*. -->
         <jakarta-ws-rs.version>3.1.0</jakarta-ws-rs.version>
         <jakarta-annotation.version>2.1.1</jakarta-annotation.version>
+        <jakarta-xml-bind.version>4.0.0</jakarta-xml-bind.version>
+        <jakarta-activation.version>2.1.0</jakarta-activation.version>
+        <jakarta-mail.version>2.1.1</jakarta-mail.version>
         <log4j2.version>2.23.1</log4j2.version>
     </properties>
 

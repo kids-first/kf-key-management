@@ -9,6 +9,7 @@ import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.keycloak.admin.client.CreatedResponseUtil;
+import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -143,8 +144,10 @@ public abstract class AbstractTest {
         passwordCred.setValue(password);
 
         user.setCredentials(Collections.singletonList(passwordCred));
-        jakarta.ws.rs.core.Response response = keycloak.getKeycloakAdminClient().realm(REALM_NAME).users().create(user);
-        return CreatedResponseUtil.getCreatedId(response);
+        try (Keycloak admin = keycloak.getKeycloakAdminClient()) {
+            jakarta.ws.rs.core.Response response = admin.realm(REALM_NAME).users().create(user);
+            return CreatedResponseUtil.getCreatedId(response);
+        }
     }
 
     public static void createKeycloakClient(String clientId) {
@@ -155,7 +158,9 @@ public abstract class AbstractTest {
         client.setDirectAccessGrantsEnabled(true);
         client.setRedirectUris(Collections.singletonList("*"));
         client.setSecret(CLIENT_SECRET);
-        keycloak.getKeycloakAdminClient().realm(REALM_NAME).clients().create(client);
+        try (Keycloak admin = keycloak.getKeycloakAdminClient()) {
+            admin.realm(REALM_NAME).clients().create(client);
+        }
     }
 
     protected static String obtainAccessToken(String username, String password) {
