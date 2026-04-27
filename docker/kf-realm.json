@@ -1796,6 +1796,22 @@
     "parRequestUriLifespan": "60",
     "cibaInterval": "5"
   },
+  "users": [
+    {
+      "username": "test",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "test", "temporary": false }
+      ]
+    },
+    {
+      "username": "test2",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "test2", "temporary": false }
+      ]
+    }
+  ],
   "keycloakVersion": "17.0.0",
   "userManagedAccessAllowed": false,
   "clientProfiles": {
