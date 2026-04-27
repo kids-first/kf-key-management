@@ -56,7 +56,7 @@ public abstract class AbstractTest {
     protected final static String KF_CLIENT_ID = "kf";
     protected static DynamoDbEnhancedAsyncClient dynamoClient;
     protected static DynamoDbAsyncTable<Secret> secretTable;
-    public static GenericContainer<?> dynamodb = new GenericContainer<>("amazon/dynamodb-local:latest")
+    public static GenericContainer<?> dynamodb = new GenericContainer<>("amazon/dynamodb-local:3.3.0")
             .withExposedPorts(DYNAMODB_PORT);
 
     public static KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:23.0.7")

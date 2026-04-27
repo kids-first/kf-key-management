@@ -1,6 +1,6 @@
 services:
   dynamodb:
-    image: amazon/dynamodb-local
+    image: amazon/dynamodb-local:3.3.0
     ports:
       - "8000:8000"
 
