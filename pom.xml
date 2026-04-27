@@ -17,7 +17,7 @@
 
     <properties>
         <java.version>17</java.version>
-        <spring-cloud.version>2021.0.1</spring-cloud.version>
+        <spring-cloud.version>2021.0.9</spring-cloud.version>
         <testcontainers.version>1.21.4</testcontainers.version>
         <!-- Override Spring Boot 2.7 BOM defaults to the Jakarta EE 9 namespace
              (javax.* → jakarta.*) so testcontainers-keycloak 3.x's admin client
