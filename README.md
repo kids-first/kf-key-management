@@ -8,23 +8,91 @@ Springboot application for storing user api tokens from third party services.
 
 ## Dev Setup
 
-To run install and run test: `mvn clean install`
+Two ways to run the app. The container path is recommended (mirrors prod); the host path is there if you'd rather iterate with Java + Maven directly.
 
-To run application on your computer, you can use docker-compose:
-```
-❯ docker-compose up
-```
+### Run everything in containers (recommended)
 
-Then you can start your application with spring profile `dev` 
 ```
-❯ mvn spring-boot:run -Dspring-boot.run.profiles=dev
+docker compose up --build
 ```
 
-Docker compose creates 3 accounts :
+First build pulls Maven dependencies and takes a few minutes; subsequent rebuilds are faster. Logs from all three services stay attached in your terminal — look for `Started KfKeyManagementApplication` in the app output (usually 10–20s after the stack comes up). `Ctrl+C` stops everything.
+
+Docker compose creates 3 accounts:
 - 1 for realm master : admin / admin
 - 2 for realm kf : test / test and test2 / test2
 
-You can then use Postman collection in the project. First you need to authenticate user using Authenticate request. Then you can use any request.
+### Run the app on your host
+
+Requires Java 17. Start only the supporting services in the background:
+
+```
+docker compose up -d keycloak dynamodb init_dynamodb
+```
+
+Then run the app:
+
+```
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+`application-dev.properties` already points Keycloak at `localhost:18080`, which reaches the compose-forwarded port from the host. No extra env setup needed.
+
+### Tests
+
+Testcontainers spins up ephemeral Keycloak + DynamoDB for the test run, independent of the `docker compose up` stack used for the app. Two ways to run the suite; pick whichever fits.
+
+#### Run tests in a container (recommended)
+
+Requires Docker on the host only — no JDK/Maven install. The compose file uses a Maven image that mounts the host's Docker socket, so Testcontainers spawns its fixtures on the same daemon you'd reach with `docker ps`.
+
+```
+docker compose -f docker-compose.test.yml run --rm test-runner
+```
+
+First run downloads Maven deps into a cached volume (~1-2 min); subsequent runs are fast.
+
+Cleanup:
+
+```
+docker compose -f docker-compose.test.yml down --remove-orphans
+```
+
+Add `-v` to also wipe the Maven `.m2` volume.
+
+#### Run tests on your host
+
+Requires Java 17 and a running Docker daemon.
+
+```
+./mvnw test
+```
+
+### Smoke test
+
+With the stack up, these commands verify each moving part independently. Every port maps to `localhost` via compose:
+- `:18080` → Keycloak
+- `:8000`  → DynamoDB Local
+- `:8080`  → the Spring app
+
+```bash
+# (1) Keycloak — password-grant login; full OIDC token response
+curl -sS -X POST http://localhost:18080/realms/kf/protocol/openid-connect/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=password&client_id=kf-api&client_secret=my_secret&username=test&password=test"
+
+# (2) DynamoDB Local — confirm the init_dynamodb sidecar created the kf-key-management-secret table
+docker compose logs init_dynamodb
+
+# (3) Spring app — public status, no auth required
+curl -sS http://localhost:8080/status
+
+# (4a) Keycloak — fetch the access token into a shell variable
+TOKEN=$(curl -s -X POST http://localhost:18080/realms/kf/protocol/openid-connect/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=password&client_id=kf-api&client_secret=my_secret&username=test&password=test" | docker run --rm -i alpine sh -c 'apk add -q jq && jq -r .access_token')
+
+# (4b) Spring app  — authenticated fence call; unsets the variable afterwards
+curl -sS -H "Authorization: Bearer $TOKEN" http://localhost:8080/fence/gen3/authenticated; unset TOKEN
+```
+
+The `kf-api` client (secret `my_secret`) is pre-provisioned in `docker/kf-realm.json`.
 
 ## Methods
 
