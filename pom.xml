@@ -19,6 +19,11 @@
         <java.version>17</java.version>
         <spring-cloud.version>2021.0.1</spring-cloud.version>
         <testcontainers.version>1.21.4</testcontainers.version>
+        <!-- Override Spring Boot 2.7 BOM defaults to the Jakarta EE 9 namespace
+             (javax.* → jakarta.*) so testcontainers-keycloak 3.x's admin client
+             resolves jakarta.ws.rs.core.Response. -->
+        <jakarta-ws-rs.version>3.1.0</jakarta-ws-rs.version>
+        <jakarta-annotation.version>2.1.1</jakarta-annotation.version>
         <log4j2.version>2.23.1</log4j2.version>
     </properties>
 
@@ -105,7 +110,7 @@
         <dependency>
             <groupId>com.github.dasniko</groupId>
             <artifactId>testcontainers-keycloak</artifactId>
-            <version>2.0.0</version>
+            <version>3.2.0</version>
             <scope>test</scope>
         </dependency>
 

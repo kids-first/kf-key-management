@@ -59,7 +59,7 @@ public abstract class AbstractTest {
     public static GenericContainer<?> dynamodb = new GenericContainer<>("amazon/dynamodb-local:latest")
             .withExposedPorts(DYNAMODB_PORT);
 
-    public static KeycloakContainer keycloak = new KeycloakContainer()
+    public static KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:23.0.7")
             .withAdminUsername("admin")
             .withAdminPassword("admin");
 
@@ -143,7 +143,7 @@ public abstract class AbstractTest {
         passwordCred.setValue(password);
 
         user.setCredentials(Collections.singletonList(passwordCred));
-        javax.ws.rs.core.Response response = keycloak.getKeycloakAdminClient().realm(REALM_NAME).users().create(user);
+        jakarta.ws.rs.core.Response response = keycloak.getKeycloakAdminClient().realm(REALM_NAME).users().create(user);
         return CreatedResponseUtil.getCreatedId(response);
     }
 
@@ -159,7 +159,7 @@ public abstract class AbstractTest {
     }
 
     protected static String obtainAccessToken(String username, String password) {
-        String tokenUrl = keycloak.getAuthServerUrl() + "realms/master/protocol/openid-connect/token";
+        String tokenUrl = keycloak.getAuthServerUrl() + "/realms/master/protocol/openid-connect/token";
         Response r = RestAssured.given()
                 .contentType("application/x-www-form-urlencoded; charset=utf-8")
                 .formParam("grant_type", "password")
