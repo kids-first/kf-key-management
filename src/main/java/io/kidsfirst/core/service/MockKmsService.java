@@ -25,6 +25,6 @@ public class MockKmsService implements KmsService {
 
     @Override
     public Mono<String> decryptAndDecompress(String cipher) {
-        return Mono.just(cipher.replaceFirst("decompressed_encrypted_", ""));
+        return Mono.just(cipher.replaceFirst("encrypted_compressed_", ""));
     }
 }
