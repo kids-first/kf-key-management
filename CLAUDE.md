@@ -20,8 +20,6 @@ Use the Maven wrapper, not a system `mvn`.
 
 Compose creates 3 Keycloak accounts: master realm `admin/admin`, kf realm `test/test` and `test2/test2`. The `kf-api` client (secret `my_secret`) is pre-provisioned in `docker/kf-realm.json` for password-grant logins. README's "Smoke test" section has curl one-liners per service.
 
-Note: the pom binds `org.owasp:dependency-check-maven` to the default lifecycle, so `./mvnw install` runs a CVE scan that can be slow and occasionally network-bound. Use `-Ddependency-check.skip=true` to bypass it during iterative work.
-
 Testcontainers 1.21.4 (pinned in `pom.xml`) negotiates API properly with Docker Engine 29+. If tests ever fail again with `client version X is too old`, check Testcontainers version first — don't reach for workarounds before trying a straight bump. History: `project_testcontainers_blocker.md`.
 
 ## Architecture
