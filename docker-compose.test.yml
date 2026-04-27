@@ -1,0 +1,22 @@
+# Run all tests in a container using the host's Docker daemon.
+# Requires only Docker on the host — no JDK/Maven install needed.
+#
+# Usage:   docker compose -f docker-compose.test.yml run --rm test-runner
+# Cleanup: docker compose -f docker-compose.test.yml down --remove-orphans
+#          add `-v` to also wipe the Maven .m2 volume
+
+services:
+  test-runner:
+    image: maven:3.9-eclipse-temurin-17
+    network_mode: host
+    environment:
+      TESTCONTAINERS_HOST_OVERRIDE: localhost
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+      - maven-cache:/root/.m2
+    working_dir: /workspace
+    command: ["./mvnw", "test"]
+
+volumes:
+  maven-cache:
