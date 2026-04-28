@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
-@Profile("dev")
+@Profile("dev & !localstack")
 public class MockKmsService implements KmsService {
 
     @Override
