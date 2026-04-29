@@ -1,10 +1,11 @@
 package io.kidsfirst.keys;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static io.kidsfirst.core.service.StringCompressService.compress;
 import static io.kidsfirst.core.service.StringCompressService.decompress;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class StringCompressTest {
 
@@ -15,12 +16,12 @@ public class StringCompressTest {
         String compressed = compress(accessToken);
         String decompressed = decompress(compressed);
 
-        Assert.assertEquals(accessToken, decompressed);
+        assertEquals(accessToken, decompressed);
     }
 
     @Test
     public void testCompressNullString() {
-        Assert.assertNull(compress(null));
+        assertNull(compress(null));
     }
 
     @Test
@@ -29,12 +30,12 @@ public class StringCompressTest {
 
         String compressed = compress(accessToken);
 
-        Assert.assertEquals(accessToken, compressed);
+        assertEquals(accessToken, compressed);
     }
 
     @Test
     public void testDecompressNullString() {
-        Assert.assertNull(decompress(null));
+        assertNull(decompress(null));
     }
 
     @Test
@@ -43,7 +44,7 @@ public class StringCompressTest {
 
         String decompressed = decompress(compressed);
 
-        Assert.assertEquals(compressed, decompressed);
+        assertEquals(compressed, decompressed);
     }
 
     @Test
@@ -52,6 +53,30 @@ public class StringCompressTest {
 
         String decompressed = decompress(accessToken);
 
-        Assert.assertEquals(accessToken, decompressed);
+        assertEquals(accessToken, decompressed);
+    }
+
+    @Test
+    public void testCompressDecompressPreservesNewlines() {
+        String input = "line1\nline2\nline3";
+        assertEquals(input, decompress(compress(input)));
+    }
+
+    @Test
+    public void testCompressDecompressPreservesMultiByteUtf8() {
+        // Non-ASCII content — accents, em-dash, multi-byte UTF-8 glyphs
+        String input = "café résumé — naïve";
+        assertEquals(input, decompress(compress(input)));
+    }
+
+    @Test
+    public void testCompressDecompressPreservesJwt() {
+        // Representative JWT shape: header.payload.signature, all base64url ASCII.
+        // Pins the production happy-path round-trip (SecretService.compressEncryptAndSave
+        // compresses JWTs in real use).
+        String jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
+                + ".eyJzdWIiOiJ1c2VyIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDM2MDB9"
+                + ".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+        assertEquals(jwt, decompress(compress(jwt)));
     }
 }
