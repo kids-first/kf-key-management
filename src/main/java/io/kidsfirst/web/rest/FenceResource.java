@@ -28,7 +28,7 @@ public class FenceResource {
     }
 
     @GetMapping("/{fence}/authenticated")
-    public Mono<ResponseEntity<JSONObject>> getAuthClient(@PathVariable("fence") String fenceKey, JwtAuthenticationToken authentication) throws IllegalArgumentException {
+    public Mono<ResponseEntity<JSONObject>> isAuthenticated(@PathVariable("fence") String fenceKey, JwtAuthenticationToken authentication) throws IllegalArgumentException {
         val userId = authentication.getTokenAttributes().get("sub").toString();
         val fence = fenceService.getFence(fenceKey);
         val defaultResponse = new JSONObject();
@@ -61,7 +61,7 @@ public class FenceResource {
     }
 
     @GetMapping("/{fence}/info")
-    public Mono<JSONObject> getAuthClient(@PathVariable("fence") String fenceKey) throws IllegalArgumentException {
+    public Mono<JSONObject> getFenceInfo(@PathVariable("fence") String fenceKey) throws IllegalArgumentException {
         val fence = fenceService.getFence(fenceKey);
         //No UserID check - no auth required
         val body = new JSONObject();
