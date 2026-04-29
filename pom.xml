@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
+        <version>4.0.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -19,19 +19,9 @@
         <java.version>17</java.version>
         <lombok.version>1.18.46</lombok.version>
         <nimbus.version>11.37</nimbus.version>
-        <spring-cloud.version>2021.0.9</spring-cloud.version>
+        <spring-cloud.version>2025.1.0</spring-cloud.version>
         <testcontainers.version>1.21.4</testcontainers.version>
         <aws-sdk.version>2.43.0</aws-sdk.version>
-        <!-- Override Spring Boot 2.7 BOM defaults to the Jakarta EE 9 namespace
-             (javax.* → jakarta.*) so testcontainers-keycloak 3.x's admin client
-             and its transitive RestEasy provider chain resolve jakarta.ws.rs.* /
-             jakarta.xml.bind.* / jakarta.activation.* / jakarta.mail.* /
-             jakarta.annotation.*. -->
-        <jakarta-ws-rs.version>3.1.0</jakarta-ws-rs.version>
-        <jakarta-annotation.version>2.1.1</jakarta-annotation.version>
-        <jakarta-xml-bind.version>4.0.0</jakarta-xml-bind.version>
-        <jakarta-activation.version>2.1.0</jakarta-activation.version>
-        <jakarta-mail.version>2.1.1</jakarta-mail.version>
         <log4j2.version>2.23.1</log4j2.version>
     </properties>
 
@@ -50,7 +40,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-gateway</artifactId>
+            <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -102,6 +92,11 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webtestclient</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -148,6 +143,7 @@
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
+            <version>6.0.0</version>
             <scope>test</scope>
         </dependency>
 

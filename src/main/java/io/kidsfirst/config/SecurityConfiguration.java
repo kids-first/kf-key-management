@@ -29,8 +29,8 @@ public class SecurityConfiguration {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(withDefaults())
                 )
-                .csrf()
-                .disable();
+                .cors(withDefaults())
+                .csrf(ServerHttpSecurity.CsrfSpec::disable);
         return http.build();
     }
 

@@ -70,7 +70,7 @@ public class FenceResource {
         body.put("proxy_uri", fence.getProxyUri());
         body.put("scope", fence.getScope());
 
-        val fullAuthorizeUri = UriComponentsBuilder.fromHttpUrl(fence.getAuthorizeUri())
+        val fullAuthorizeUri = UriComponentsBuilder.fromUriString(fence.getAuthorizeUri())
                 .queryParam("scope", fence.getScope().replace("%20", " ")) //Do not encode twice space character
                 .queryParam("client_id", fence.getClientId())
                 .queryParam("redirect_uri", fence.getRedirectUri())
