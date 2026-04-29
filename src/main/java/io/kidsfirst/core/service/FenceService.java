@@ -31,7 +31,7 @@ public class FenceService {
             val clientSecret = fence.getClientSecret();
             val fenceEndpoint = fence.getTokenEndpoint();
 
-            val request = new TokenRequest(
+            val request = new TokenRequest.Builder(
                     new URI(fenceEndpoint),
                     new ClientSecretBasic(
                             new ClientID(clientId),
@@ -40,7 +40,7 @@ public class FenceService {
                     new RefreshTokenGrant(
                             new RefreshToken(refreshToken)
                     )
-            );
+            ).build();
 
             val fenceResponse = request.toHTTPRequest().send();
 
