@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.MediaType;
@@ -48,16 +47,15 @@ public class FenceTests extends AbstractTest {
     }
 
 
-    @Disabled("Spring 7 rejects allowCredentials(true) + addAllowedOriginPattern(\"*\") with 403 (correct per CORS spec). Re-enable after polish-plan Tier 1 #3: tighten cors_allowed_domains to an explicit allow-list.")
     @Test
     void testFenceAuthClientPreflight() {
         webClient.options()
                 .uri(fenceAuthClientUri)
-                .header("Origin", "https://example.com")
+                .header("Origin", "https://portal-qa.kidsfirstdrc.org")
                 .header("Access-Control-Request-Method", "GET")
                 .exchange()
                 .expectStatus().is2xxSuccessful()
-                .expectHeader().valueEquals("Access-Control-Allow-Origin", "https://example.com");
+                .expectHeader().valueEquals("Access-Control-Allow-Origin", "https://portal-qa.kidsfirstdrc.org");
 
     }
 
