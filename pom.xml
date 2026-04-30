@@ -22,6 +22,7 @@
         <spring-cloud.version>2025.1.0</spring-cloud.version>
         <testcontainers.version>1.21.4</testcontainers.version>
         <aws-sdk.version>2.43.0</aws-sdk.version>
+        <bouncycastle.version>1.84</bouncycastle.version>
         <log4j2.version>2.23.1</log4j2.version>
     </properties>
 
@@ -172,6 +173,12 @@
                 <version>${aws-sdk.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
