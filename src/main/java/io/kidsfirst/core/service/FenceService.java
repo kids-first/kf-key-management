@@ -19,6 +19,9 @@ import java.util.Optional;
 @Component
 @Slf4j
 public class FenceService {
+    private static final int CONNECT_TIMEOUT_MS = 5_000;
+    private static final int READ_TIMEOUT_MS = 10_000;
+
     private final AllFences fences;
 
     public FenceService(AllFences fences) {
@@ -31,7 +34,7 @@ public class FenceService {
             val clientSecret = fence.getClientSecret();
             val fenceEndpoint = fence.getTokenEndpoint();
 
-            val request = new TokenRequest(
+            val request = new TokenRequest.Builder(
                     new URI(fenceEndpoint),
                     new ClientSecretBasic(
                             new ClientID(clientId),
@@ -40,9 +43,12 @@ public class FenceService {
                     new RefreshTokenGrant(
                             new RefreshToken(refreshToken)
                     )
-            );
+            ).build();
 
-            val fenceResponse = request.toHTTPRequest().send();
+            val httpRequest = request.toHTTPRequest();
+            httpRequest.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            httpRequest.setReadTimeout(READ_TIMEOUT_MS);
+            val fenceResponse = httpRequest.send();
 
             if (fenceResponse.indicatesSuccess()) {
                 val tokens = OIDCTokenResponse
@@ -83,7 +89,10 @@ public class FenceService {
 
                 new Scope(fence.getScope())
         );
-        val fenceResponse = fenceRequest.toHTTPRequest().send();
+        val httpRequest = fenceRequest.toHTTPRequest();
+        httpRequest.setConnectTimeout(CONNECT_TIMEOUT_MS);
+        httpRequest.setReadTimeout(READ_TIMEOUT_MS);
+        val fenceResponse = httpRequest.send();
 
         if (fenceResponse.indicatesSuccess()) {
             val tokens = OIDCTokenResponse

@@ -1,8 +1,8 @@
 package io.kidsfirst.web.rest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import io.kidsfirst.config.AllFences;
 import io.kidsfirst.core.model.Acl;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +28,10 @@ public class FenceAclGatewaySpecUtil {
                                 if (Objects.requireNonNull(serverWebExchange.getResponse().getStatusCode()).is2xxSuccessful()) {
                                     try {
                                         JsonNode m = objectMapper.readTree(s);
-                                        val acl = new Acl(m.path("project_access").fieldNames());
+                                        val acl = new Acl(m.path("project_access").propertyNames().iterator());
                                         val data = objectMapper.writeValueAsString(acl);
                                         return Mono.just(data);
-                                    } catch (JsonProcessingException e) {
+                                    } catch (JacksonException e) {
                                         throw new IllegalStateException("Impossible to parse json", e);
                                     }
                                 } else {
@@ -51,7 +51,7 @@ public class FenceAclGatewaySpecUtil {
                 exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
                 return exchange.getResponse().writeWith(Mono.just(obj).map(dataBufferFactory::wrap));
 
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new IllegalStateException("Impossible to parse json", e);
             }
         });

@@ -9,11 +9,12 @@ import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.keycloak.admin.client.CreatedResponseUtil;
+import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -56,10 +57,10 @@ public abstract class AbstractTest {
     protected final static String KF_CLIENT_ID = "kf";
     protected static DynamoDbEnhancedAsyncClient dynamoClient;
     protected static DynamoDbAsyncTable<Secret> secretTable;
-    public static GenericContainer<?> dynamodb = new GenericContainer<>("amazon/dynamodb-local:latest")
+    public static GenericContainer<?> dynamodb = new GenericContainer<>("amazon/dynamodb-local:3.3.0")
             .withExposedPorts(DYNAMODB_PORT);
 
-    public static KeycloakContainer keycloak = new KeycloakContainer()
+    public static KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:23.0.7")
             .withAdminUsername("admin")
             .withAdminPassword("admin");
 
@@ -143,8 +144,10 @@ public abstract class AbstractTest {
         passwordCred.setValue(password);
 
         user.setCredentials(Collections.singletonList(passwordCred));
-        javax.ws.rs.core.Response response = keycloak.getKeycloakAdminClient().realm(REALM_NAME).users().create(user);
-        return CreatedResponseUtil.getCreatedId(response);
+        try (Keycloak admin = keycloak.getKeycloakAdminClient()) {
+            jakarta.ws.rs.core.Response response = admin.realm(REALM_NAME).users().create(user);
+            return CreatedResponseUtil.getCreatedId(response);
+        }
     }
 
     public static void createKeycloakClient(String clientId) {
@@ -155,11 +158,13 @@ public abstract class AbstractTest {
         client.setDirectAccessGrantsEnabled(true);
         client.setRedirectUris(Collections.singletonList("*"));
         client.setSecret(CLIENT_SECRET);
-        keycloak.getKeycloakAdminClient().realm(REALM_NAME).clients().create(client);
+        try (Keycloak admin = keycloak.getKeycloakAdminClient()) {
+            admin.realm(REALM_NAME).clients().create(client);
+        }
     }
 
     protected static String obtainAccessToken(String username, String password) {
-        String tokenUrl = keycloak.getAuthServerUrl() + "realms/master/protocol/openid-connect/token";
+        String tokenUrl = keycloak.getAuthServerUrl() + "/realms/master/protocol/openid-connect/token";
         Response r = RestAssured.given()
                 .contentType("application/x-www-form-urlencoded; charset=utf-8")
                 .formParam("grant_type", "password")

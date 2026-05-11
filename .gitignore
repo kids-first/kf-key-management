@@ -31,3 +31,8 @@ target
 *.factorypath
 
 ssl
+
+# NIH RAS Partner Developer Guide — vendor reference, kept locally only
+docs/rasDevDoc.pdf
+# Curated plain-text render of docs/rasDevDoc.pdf — regenerate as needed, not tracked
+docs/rasDevDoc.txt

@@ -14,9 +14,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.Lock;
 
 @Component
 @Slf4j
@@ -24,7 +21,6 @@ public class FenceAuthFilterFactory extends AbstractGatewayFilterFactory<FenceAu
 
     private final SecretService secretService;
     private final FenceService fenceService;
-    private final ConcurrentMap<String, Lock> locks = new ConcurrentHashMap<>();
 
     public FenceAuthFilterFactory(SecretService secretService, FenceService fenceService) {
         this.secretService = secretService;
@@ -66,6 +62,23 @@ public class FenceAuthFilterFactory extends AbstractGatewayFilterFactory<FenceAu
         }
     }
 
+    /**
+     * KNOWN ISSUE: not single-flight. N parallel requests for the same
+     * (user, fence) tuple each independently observe an expired access token
+     * and trigger their own refresh, fanning out to the fence's token endpoint.
+     *
+     * <p>Combined with refresh-token rotation (RFC 6749 §10.4 permits, and
+     * RFC 9700 — OAuth 2.0 Security Best Current Practice — effectively
+     * requires rotation for public clients; Gen3 and DCF do rotate), this
+     * can leave the stored refresh token desynchronized from the fence's
+     * view, manifesting as silent re-auth requirements for the user.
+     *
+     * <p>Pinned by {@link io.kidsfirst.keys.FenceConcurrentRefreshFanOutTest}.
+     * Fix deferred to a separate PR — the planned shape is a
+     * {@code ConcurrentMap<String, Mono<String>>} populated via
+     * {@code computeIfAbsent} + {@code cache()} + {@code doOnTerminate(remove)}
+     * so concurrent subscribers share one in-flight refresh.
+     */
     public Mono<String> fetchAccessTokenAndRefreshIfNeeded(String userId, AllFences.Fence fence) {
         String key = userId + "_" + fence.getName();
         return secretService.fetchAndDecryptNotExpired(userId, fence.keyAccessToken())

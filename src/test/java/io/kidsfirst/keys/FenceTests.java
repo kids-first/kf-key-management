@@ -51,9 +51,11 @@ public class FenceTests extends AbstractTest {
     void testFenceAuthClientPreflight() {
         webClient.options()
                 .uri(fenceAuthClientUri)
+                .header("Origin", "https://portal-qa.kidsfirstdrc.org")
+                .header("Access-Control-Request-Method", "GET")
                 .exchange()
                 .expectStatus().is2xxSuccessful()
-                .expectHeader().value("Allow", matchValues("GET", "HEAD", "OPTIONS"));
+                .expectHeader().valueEquals("Access-Control-Allow-Origin", "https://portal-qa.kidsfirstdrc.org");
 
     }
 

@@ -2,6 +2,7 @@ package io.kidsfirst.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -10,6 +11,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+@Configuration
 @ConditionalOnProperty(name = "spring.security.oauth2.resourceserver.jwt.issuer-uri")
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
@@ -29,8 +31,8 @@ public class SecurityConfiguration {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(withDefaults())
                 )
-                .csrf()
-                .disable();
+                .cors(withDefaults())
+                .csrf(ServerHttpSecurity.CsrfSpec::disable);
         return http.build();
     }
 
