@@ -337,6 +337,47 @@ public class DynamicProxyTests extends AbstractTest {
                 .expectStatus().isBadRequest();
     }
 
+    // Regression test for the duplicate CORS header bug (SKFP-1616).
+    //
+    // /fence/{fence}/acl PROXIES to an upstream Gen3/DCF server. In prod the upstream returns its
+    // own CORS headers, including "Access-Control-Allow-Origin: *". This app's CorsWebFilter
+    // independently sets "Access-Control-Allow-Origin: <caller origin>" on the way in. Both survive
+    // onto the response as two separate header lines (ours first, upstream's "*" second) — exactly
+    // the live response on key-manager-prd.kf-strides.org/fence/dcf/acl:
+    //
+    //   access-control-allow-origin: https://portal.kidsfirstdrc.org
+    //   access-control-allow-origin: *
+    //
+    // which the browser rejects: "The 'Access-Control-Allow-Origin' header contains multiple values
+    // '..., *', but only one is allowed."
+    //
+    // We stub the upstream to send "*" (as prod DCF does) and assert the proxied response carries
+    // EXACTLY ONE Access-Control-Allow-Origin equal to the caller's Origin. valueEquals fails on
+    // both the doubled case (unfixed, two values) and a zeroed case (a fix that wrongly strips ours
+    // too). The test profile sets cors_allowed_domains to the single origin below (see
+    // src/test/resources/application.yml), so we must send exactly that Origin or the CORS filter
+    // 403s it. The harness uses the gen3 fence, which shares the identical filterAcl path with dcf.
+    @Test
+    void testFenceAclStripsDuplicateUpstreamCorsHeader() throws IOException {
+        final String portalOrigin = "https://portal-qa.kidsfirstdrc.org";
+        val expiration = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
+        val userIdAndToken = createUserAndSecretAndObtainAccessToken("fence_gen3_access", "this_is_access_token", expiration);
+        final String content = contentFromResource("/gen3_user.json");
+        gen3VM.stubFor(get("/user/user").willReturn(ok(content)
+                .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .withHeader("Access-Control-Allow-Origin", "*")
+                .withHeader("Access-Control-Expose-Headers", "*")));
+        webClient
+                .get()
+                .uri(fenceAclUri)
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Origin", portalOrigin)
+                .header("Authorization", "Bearer " + userIdAndToken.getAccessToken())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().valueEquals("Access-Control-Allow-Origin", portalOrigin);
+    }
+
     @Test
     void testFenceUserCavatica() {
         val expiration = now().plus(10, ChronoUnit.SECONDS).getEpochSecond();
