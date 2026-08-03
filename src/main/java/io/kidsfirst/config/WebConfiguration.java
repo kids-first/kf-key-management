@@ -59,13 +59,19 @@ public class WebConfiguration {
                                         .filters(f ->
                                                 f.rewritePath(fence.getProxyUri() + "(?<segment>/?.*)", "$\\{segment}")
                                                         .filter(fenceAuthFilterFactory.apply(new FenceAuthFilterFactory.Config(fence)))
+                                                        // The upstream fence (Gen3/DCF) sets its own "Access-Control-Allow-Origin: *",
+                                                        // which the proxy relays. This app's CorsWebFilter already set the correct
+                                                        // origin first, so collapse to that one value and drop the leaked upstream copy.
+                                                        .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
                                         ).uri(fence.getApiEndpoint())
                         )
                         .route(fence.getName() + "_acl_route",
                                 r -> r.path("/fence/" + fence.getName() + "/acl")
                                         .filters(
                                                 f -> filterAcl(
-                                                        f.filter(fenceAuthFilterFactory.apply(new FenceAuthFilterFactory.Config(fence))),
+                                                        f.filter(fenceAuthFilterFactory.apply(new FenceAuthFilterFactory.Config(fence)))
+                                                                // See _route above: strip the upstream's duplicate CORS origin header.
+                                                                .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST"),
                                                         fence
                                                 )
                                         ).uri(fence.getApiEndpoint())
